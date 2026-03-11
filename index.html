@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FridgeAI</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<title>FridgeAI</title>
 
 <style>
 
@@ -23,6 +23,7 @@ background-position:center;
 padding:20px;
 }
 
+.loginBg{background-image:url("https://images.unsplash.com/photo-1490818387583-1baba5e638af");}
 .scanBg{background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");}
 .recipeBg{background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c");}
 .planBg{background-image:url("https://images.unsplash.com/photo-1556910103-1c02745aae4d");}
@@ -76,7 +77,6 @@ background:#22c55e;
 padding:8px;
 margin:5px;
 border-radius:6px;
-cursor:grab;
 }
 
 .day{
@@ -103,21 +103,47 @@ color:white;
 cursor:pointer;
 }
 
-video{
-width:320px;
-border-radius:10px;
+input{
+padding:10px;
+margin:5px;
+border-radius:6px;
+border:none;
 }
 
 </style>
+
 </head>
 
 <body>
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="pageBg loginBg">
+
+<div class="overlay">
+
+<h1>FridgeAI Login</h1>
+
+<input id="email" placeholder="Email">
+
+<input id="password" type="password" placeholder="Passwort">
+
+<button onclick="register()">Registrieren</button>
+<button onclick="login()">Login</button>
+
+</div>
+
+</div>
+
+<!-- APP -->
+
+<div id="app" style="display:none">
 
 <div class="sidebar">
 
 <h2>FridgeAI</h2>
 
-<button onclick="showPage('scan')">📷 Kühlschrank Scan</button>
+<button onclick="showPage('scan')">📷 Analyse</button>
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
 <button onclick="showPage('plan')">📅 Wochenplan</button>
 <button onclick="showPage('shop')">🛒 Einkaufsliste</button>
@@ -126,32 +152,28 @@ border-radius:10px;
 
 <div class="content">
 
+<!-- SCAN -->
+
 <div id="scan" class="page active pageBg scanBg">
 <div class="overlay">
 
 <h1>Kühlschrank Analyse</h1>
 
-<button onclick="startCamera()">Kamera starten</button>
-<button onclick="takePhoto()">Foto aufnehmen</button>
 <button onclick="analyze()">Analysieren</button>
 
-<br><br>
-
-<video id="video" autoplay></video>
-<canvas id="canvas" style="display:none"></canvas>
-
 <h3>Zutaten</h3>
+
 <div id="ingredientList"></div>
 
 </div>
 </div>
 
+<!-- RECIPES -->
+
 <div id="recipes" class="page pageBg recipeBg">
 <div class="overlay">
 
 <h1>Rezepte</h1>
-
-<div id="premiumText"></div>
 
 <button onclick="buyPremium()">Premium kaufen – 3.99 €</button>
 
@@ -159,6 +181,8 @@ border-radius:10px;
 
 </div>
 </div>
+
+<!-- PLAN -->
 
 <div id="plan" class="page pageBg planBg">
 <div class="overlay">
@@ -180,6 +204,8 @@ border-radius:10px;
 </div>
 </div>
 
+<!-- SHOP -->
+
 <div id="shop" class="page pageBg shopBg">
 <div class="overlay">
 
@@ -192,68 +218,66 @@ border-radius:10px;
 
 </div>
 
+</div>
+
 <script>
 
-let video=document.getElementById("video")
-let canvas=document.getElementById("canvas")
-let ingredients=[]
 let premium=false
+let ingredients=[]
 
-const foodMap={
-apple:"Apfel",
-banana:"Banane",
-orange:"Orange",
-sandwich:"Sandwich",
-bottle:"Getränk"
+let foods=[
+"Apfel","Banane","Orange","Zitrone","Limette","Birne","Pfirsich","Mango","Ananas","Erdbeere",
+"Tomate","Gurke","Paprika","Zwiebel","Knoblauch","Karotte","Brokkoli","Blumenkohl","Spinat","Salat",
+"Kartoffel","Süßkartoffel","Reis","Pasta","Spaghetti","Nudeln","Quinoa","Haferflocken","Mehl","Zucker",
+"Milch","Joghurt","Butter","Käse","Ei","Sahne","Frischkäse","Mozzarella","Parmesan","Feta",
+"Hähnchen","Rindfleisch","Schwein","Lachs","Thunfisch","Shrimps","Tofu","Tempeh","Bohnen","Linsen",
+"Kichererbsen","Mais","Erbsen","Pilze","Avocado","Oliven","Mandeln","Walnüsse","Haselnüsse","Cashews",
+"Rosinen","Honig","Ahornsirup","Ketchup","Mayonnaise","Senf","Sojasauce","Chilisauce","Curry","Paprikapulver",
+"Oregano","Basilikum","Thymian","Rosmarin","Zimt","Muskat","Koriander","Kreuzkümmel","Vanille","Schokolade",
+"Kakao","Kokosmilch","Kokosraspel","Bananchips","Popcorn","Chips","Cracker","Brot","Toast","Brötchen",
+"Bagel","Wrap","Tortilla","Pizza","Burger","Hotdog","Lasagne","Ravioli","Tiramisu","Kuchen"
+]
+
+function register(){
+
+localStorage.setItem("user",
+JSON.stringify({email:email.value,password:password.value})
+)
+
+alert("Registriert")
+
 }
 
-let model
+function login(){
 
-async function loadModel(){
-model=await cocoSsd.load()
+let user=JSON.parse(localStorage.getItem("user"))
+
+if(user && user.email===email.value && user.password===password.value){
+
+loginPage.style.display="none"
+app.style.display="block"
+
 }
 
-loadModel()
+}
 
 function showPage(id){
+
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+
 document.getElementById(id).classList.add("active")
-}
-
-async function startCamera(){
-
-const stream=await navigator.mediaDevices.getUserMedia({
-video:true
-})
-
-video.srcObject=stream
 
 }
 
-function takePhoto(){
-
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
-
-const ctx=canvas.getContext("2d")
-
-ctx.drawImage(video,0,0)
-
-}
-
-async function analyze(){
-
-const predictions=await model.detect(canvas)
+function analyze(){
 
 ingredients=[]
 
-predictions.forEach(p=>{
+for(let i=0;i<5;i++){
 
-if(foodMap[p.class]){
-ingredients.push(foodMap[p.class])
+ingredients.push(foods[Math.floor(Math.random()*foods.length)])
+
 }
-
-})
 
 renderIngredients()
 generateRecipes()
@@ -265,10 +289,13 @@ function renderIngredients(){
 ingredientList.innerHTML=""
 
 ingredients.forEach(i=>{
+
 let el=document.createElement("div")
 el.className="card"
 el.innerText=i
+
 ingredientList.appendChild(el)
+
 })
 
 }
@@ -286,30 +313,20 @@ recipeList.innerHTML=""
 
 if(!premium){
 
-premiumText.innerHTML="🔒 Rezepte nur mit Premium (3.99€)"
+recipeList.innerHTML="🔒 Premium erforderlich für Rezepte"
 
 return
+
 }
 
-premiumText.innerHTML=""
+ingredients.forEach(i=>{
 
-let recipes=[]
+let r=document.createElement("div")
 
-if(ingredients.includes("Apfel"))recipes.push("Fruchtsalat")
-if(ingredients.includes("Banane"))recipes.push("Bananen Pancakes")
-if(ingredients.includes("Sandwich"))recipes.push("Sandwich Toast")
+r.className="recipe"
+r.innerText="Gericht mit "+i
 
-if(recipes.length==0){
-recipes=["Omelett","Pasta","Gemüsepfanne"]
-}
-
-recipes.forEach(r=>{
-
-let el=document.createElement("div")
-el.className="recipe"
-el.innerText=r
-
-recipeList.appendChild(el)
+recipeList.appendChild(r)
 
 })
 
@@ -318,4 +335,5 @@ recipeList.appendChild(el)
 </script>
 
 </body>
+
 </html>
