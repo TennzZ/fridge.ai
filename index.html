@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>FridgeAI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <style>
 
@@ -101,11 +103,9 @@ color:white;
 cursor:pointer;
 }
 
-input{
-padding:10px;
-margin:5px;
-border-radius:6px;
-border:none;
+video{
+width:320px;
+border-radius:10px;
 }
 
 </style>
@@ -117,7 +117,7 @@ border:none;
 
 <h2>FridgeAI</h2>
 
-<button onclick="showPage('scan')">📷 Analyse</button>
+<button onclick="showPage('scan')">📷 Kühlschrank Scan</button>
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
 <button onclick="showPage('plan')">📅 Wochenplan</button>
 <button onclick="showPage('shop')">🛒 Einkaufsliste</button>
@@ -131,13 +131,17 @@ border:none;
 
 <h1>Kühlschrank Analyse</h1>
 
-<button onclick="simulateScan()">Kühlschrank analysieren</button>
+<button onclick="startCamera()">Kamera starten</button>
+<button onclick="takePhoto()">Foto aufnehmen</button>
+<button onclick="analyze()">Analysieren</button>
+
+<br><br>
+
+<video id="video" autoplay></video>
+<canvas id="canvas" style="display:none"></canvas>
 
 <h3>Zutaten</h3>
 <div id="ingredientList"></div>
-
-<input id="newIngredient" placeholder="Lebensmittel hinzufügen">
-<button onclick="addIngredient()">Hinzufügen</button>
 
 </div>
 </div>
@@ -147,9 +151,9 @@ border:none;
 
 <h1>Rezepte</h1>
 
-<div id="premiumMessage"></div>
+<div id="premiumText"></div>
 
-<button onclick="activatePremium()">Premium aktivieren</button>
+<button onclick="buyPremium()">Premium kaufen – 3.99 €</button>
 
 <div id="recipeList"></div>
 
@@ -163,13 +167,13 @@ border:none;
 
 <div class="plan">
 
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Samstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Sonntag</div>
+<div class="day">Montag</div>
+<div class="day">Dienstag</div>
+<div class="day">Mittwoch</div>
+<div class="day">Donnerstag</div>
+<div class="day">Freitag</div>
+<div class="day">Samstag</div>
+<div class="day">Sonntag</div>
 
 </div>
 
@@ -181,9 +185,6 @@ border:none;
 
 <h1>Einkaufsliste</h1>
 
-<input id="shopInput" placeholder="Produkt hinzufügen">
-<button onclick="addShopping()">Hinzufügen</button>
-
 <div id="shoppingList"></div>
 
 </div>
@@ -193,41 +194,66 @@ border:none;
 
 <script>
 
+let video=document.getElementById("video")
+let canvas=document.getElementById("canvas")
 let ingredients=[]
-let shopping=[]
 let premium=false
 
-let recipes=[
-{name:"Omelett",needs:["Ei","Käse"]},
-{name:"Tomaten Pasta",needs:["Tomate","Spaghetti"]},
-{name:"Sandwich",needs:["Brot","Käse"]},
-{name:"Salat",needs:["Salat","Tomate"]}
-]
+const foodMap={
+apple:"Apfel",
+banana:"Banane",
+orange:"Orange",
+sandwich:"Sandwich",
+bottle:"Getränk"
+}
+
+let model
+
+async function loadModel(){
+model=await cocoSsd.load()
+}
+
+loadModel()
 
 function showPage(id){
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
 document.getElementById(id).classList.add("active")
 }
 
-function simulateScan(){
+async function startCamera(){
 
-const scans=[
-["Ei","Käse","Tomate"],
-["Brot","Käse"],
-["Salat","Tomate"],
-["Ei","Tomate"]
-]
+const stream=await navigator.mediaDevices.getUserMedia({
+video:true
+})
 
-ingredients=scans[Math.floor(Math.random()*scans.length)]
-
-renderIngredients()
-generateRecipes()
+video.srcObject=stream
 
 }
 
-function addIngredient(){
+function takePhoto(){
 
-ingredients.push(newIngredient.value)
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+
+const ctx=canvas.getContext("2d")
+
+ctx.drawImage(video,0,0)
+
+}
+
+async function analyze(){
+
+const predictions=await model.detect(canvas)
+
+ingredients=[]
+
+predictions.forEach(p=>{
+
+if(foodMap[p.class]){
+ingredients.push(foodMap[p.class])
+}
+
+})
 
 renderIngredients()
 generateRecipes()
@@ -247,7 +273,7 @@ ingredientList.appendChild(el)
 
 }
 
-function activatePremium(){
+function buyPremium(){
 
 premium=true
 generateRecipes()
@@ -260,85 +286,32 @@ recipeList.innerHTML=""
 
 if(!premium){
 
-premiumMessage.innerHTML="🔒 Rezepte nur mit Premium Abo"
-return
+premiumText.innerHTML="🔒 Rezepte nur mit Premium (3.99€)"
 
+return
 }
 
-premiumMessage.innerHTML=""
+premiumText.innerHTML=""
+
+let recipes=[]
+
+if(ingredients.includes("Apfel"))recipes.push("Fruchtsalat")
+if(ingredients.includes("Banane"))recipes.push("Bananen Pancakes")
+if(ingredients.includes("Sandwich"))recipes.push("Sandwich Toast")
+
+if(recipes.length==0){
+recipes=["Omelett","Pasta","Gemüsepfanne"]
+}
 
 recipes.forEach(r=>{
 
 let el=document.createElement("div")
 el.className="recipe"
-el.innerText=r.name
-el.draggable=true
-
-el.ondragstart=(e)=>{
-e.dataTransfer.setData("recipe",JSON.stringify(r))
-}
+el.innerText=r
 
 recipeList.appendChild(el)
 
 })
-
-}
-
-function allowDrop(e){
-e.preventDefault()
-}
-
-function drop(e){
-
-e.preventDefault()
-
-let recipe=JSON.parse(e.dataTransfer.getData("recipe"))
-
-let el=document.createElement("div")
-el.innerText=recipe.name
-
-e.target.appendChild(el)
-
-recipe.needs.forEach(n=>{
-
-if(!ingredients.includes(n) && !shopping.includes(n)){
-shopping.push(n)
-}
-
-})
-
-renderShopping()
-
-}
-
-function addShopping(){
-
-shopping.push(shopInput.value)
-renderShopping()
-
-}
-
-function renderShopping(){
-
-shoppingList.innerHTML=""
-
-shopping.forEach((i,index)=>{
-
-let el=document.createElement("div")
-el.className="card"
-
-el.innerHTML=i+" <button onclick='removeItem("+index+")'>X</button>"
-
-shoppingList.appendChild(el)
-
-})
-
-}
-
-function removeItem(i){
-
-shopping.splice(i,1)
-renderShopping()
 
 }
 
