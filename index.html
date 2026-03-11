@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
 
 <meta charset="UTF-8">
@@ -16,169 +15,125 @@
 body{
 margin:0;
 font-family:Arial;
-background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
-background-size:cover;
+background:#111;
 color:white;
 }
 
-.overlay{
-background:rgba(0,0,0,0.7);
-min-height:100vh;
-}
-
-.center{
+.loginScreen{
+background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
+background-size:cover;
+height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
 }
 
 .loginCard{
-
-background:#1f2937;
+background:rgba(0,0,0,0.85);
 padding:30px;
 border-radius:10px;
-width:320px;
+width:300px;
 text-align:center;
-
 }
 
 input{
-
 width:100%;
 padding:10px;
-margin:6px 0;
-border-radius:6px;
+margin:5px 0;
 border:none;
-
+border-radius:6px;
 }
 
 button{
-
-padding:10px 20px;
-margin-top:10px;
+padding:10px;
+margin:5px;
 border:none;
 border-radius:6px;
 background:#22c55e;
 color:white;
 cursor:pointer;
-
 }
 
 .app{
-
 display:none;
-
 }
 
-.appLayout{
-
+.layout{
 display:flex;
 min-height:100vh;
-
 }
 
 .sidebar{
-
 width:220px;
-background:#111827;
+background:#1f2937;
 padding:20px;
-
 }
 
 .sidebar button{
-
 display:block;
 width:100%;
-margin:8px 0;
+margin:10px 0;
 padding:12px;
-border:none;
 background:#374151;
+border:none;
 color:white;
 border-radius:8px;
 cursor:pointer;
-
 }
 
 .content{
-
 flex:1;
 padding:20px;
-
 }
 
 .page{
-
 display:none;
-
 }
 
 .active{
-
 display:block;
-
 }
 
 .card{
-
 background:#1f2937;
-padding:12px;
-margin:6px;
-border-radius:8px;
+padding:10px;
+margin:5px;
+border-radius:6px;
 display:inline-block;
-
 }
 
 .food{
-
 background:#22c55e;
 padding:6px;
 margin:5px;
 border-radius:6px;
 cursor:grab;
-
 }
 
 .plan{
-
 display:flex;
 flex-wrap:wrap;
 gap:10px;
-
 }
 
 .day{
-
 background:#1f2937;
 padding:10px;
-width:150px;
+width:130px;
 min-height:120px;
 border-radius:10px;
-
 }
 
 .shopItem{
-
 background:#1f2937;
 padding:8px;
 margin:5px;
 border-radius:6px;
-
-}
-
-img.foodimg{
-
-width:100px;
-border-radius:10px;
-margin:5px;
-
 }
 
 video{
-
 width:320px;
 border-radius:10px;
-
 }
 
 </style>
@@ -187,20 +142,16 @@ border-radius:10px;
 
 <body>
 
-<div class="overlay">
-
-<div id="loginScreen" class="center">
+<div id="loginScreen" class="loginScreen">
 
 <div class="loginCard">
 
 <h2>FridgeAI Login</h2>
 
 <input id="email" placeholder="Email">
-
 <input id="pass" type="password" placeholder="Passwort">
 
 <button onclick="register()">Registrieren</button>
-
 <button onclick="login()">Login</button>
 
 </div>
@@ -209,55 +160,44 @@ border-radius:10px;
 
 <div id="app" class="app">
 
-<div class="appLayout">
+<div class="layout">
 
 <div class="sidebar">
 
-<h3>FridgeAI</h3>
+<h2>FridgeAI</h2>
 
-<button onclick="showPage('dashboard')">🏠 Dashboard</button>
-
-<button onclick="showPage('scan')">📷 Kühlschrank Scan</button>
-
+<button onclick="showPage('scan')">📷 Scan</button>
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
-
 <button onclick="showPage('plan')">📅 Wochenplan</button>
-
 <button onclick="showPage('shop')">🛒 Einkauf</button>
-
 <button onclick="logout()">Logout</button>
 
 </div>
 
 <div class="content">
 
-<div id="dashboard" class="page active">
-
-<h1>Willkommen bei FridgeAI</h1>
-
-<img src="https://images.unsplash.com/photo-1490818387583-1baba5e638af" width="300">
-
-<p>Scanne deinen Kühlschrank und finde Rezepte.</p>
-
-</div>
-
-<div id="scan" class="page">
+<div id="scan" class="page active">
 
 <h1>Kühlschrank Scan</h1>
 
 <button onclick="startCamera()">Kamera starten</button>
+<button onclick="switchCamera()">Kamera wechseln</button>
+<button onclick="takePhoto()">Foto aufnehmen</button>
+<button onclick="analyze()">Analysieren</button>
+
+<br><br>
 
 <video id="video" autoplay></video>
-
 <canvas id="canvas" style="display:none"></canvas>
 
 <h3>Zutaten</h3>
-
 <div id="foods"></div>
 
-<input id="newFood" placeholder="Lebensmittel hinzufügen">
-
+<input id="manualFood" placeholder="Lebensmittel hinzufügen">
 <button onclick="addFood()">Hinzufügen</button>
+
+<h3>Kalorien Gesamt</h3>
+<div id="calories"></div>
 
 </div>
 
@@ -275,15 +215,13 @@ border-radius:10px;
 
 <div class="plan">
 
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
-
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
-
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
-
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
-
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
+<div class="day">Montag</div>
+<div class="day">Dienstag</div>
+<div class="day">Mittwoch</div>
+<div class="day">Donnerstag</div>
+<div class="day">Freitag</div>
+<div class="day">Samstag</div>
+<div class="day">Sonntag</div>
 
 </div>
 
@@ -294,12 +232,9 @@ border-radius:10px;
 <h1>Einkaufsliste</h1>
 
 <input id="shopInput" placeholder="Produkt">
-
 <button onclick="addShop()">Hinzufügen</button>
 
 <div id="shopList"></div>
-
-</div>
 
 </div>
 
@@ -314,18 +249,29 @@ border-radius:10px;
 let ingredients=[]
 let shopping=[]
 let video=document.getElementById("video")
+let canvas=document.getElementById("canvas")
+let camera="environment"
+
+const foodMap={
+apple:{name:"Apfel",cal:95},
+banana:{name:"Banane",cal:105},
+orange:{name:"Orange",cal:62},
+sandwich:{name:"Sandwich",cal:250},
+bottle:{name:"Getränk",cal:120}
+}
+
+let model
+
+async function loadModel(){
+model=await cocoSsd.load()
+}
+
+loadModel()
 
 function register(){
 
 localStorage.setItem("user",
-
-JSON.stringify({
-
-email:email.value,
-pass:pass.value
-
-})
-
+JSON.stringify({email:email.value,pass:pass.value})
 )
 
 alert("Registriert")
@@ -348,9 +294,7 @@ app.style.display="block"
 }
 
 function logout(){
-
 location.reload()
-
 }
 
 function showPage(p){
@@ -363,18 +307,63 @@ document.getElementById(p).classList.add("active")
 
 async function startCamera(){
 
-const stream=await navigator.mediaDevices.getUserMedia({video:true})
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:camera}
+})
 
 video.srcObject=stream
 
 }
 
-function addFood(){
+function switchCamera(){
 
-ingredients.push(newFood.value)
+camera=camera==="environment"?"user":"environment"
+
+startCamera()
+
+}
+
+function takePhoto(){
+
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+
+const ctx=canvas.getContext("2d")
+
+ctx.drawImage(video,0,0)
+
+}
+
+async function analyze(){
+
+const predictions=await model.detect(canvas)
+
+let total=0
+
+predictions.forEach(p=>{
+
+if(foodMap[p.class]){
+
+ingredients.push(foodMap[p.class].name)
+total+=foodMap[p.class].cal
+
+}
+
+})
 
 renderFoods()
+
+document.getElementById("calories").innerText=total+" kcal"
+
 generateRecipes()
+
+}
+
+function addFood(){
+
+ingredients.push(manualFood.value)
+
+renderFoods()
 
 }
 
@@ -382,13 +371,12 @@ function renderFoods(){
 
 foods.innerHTML=""
 
-ingredients.forEach(i=>{
+ingredients.forEach(f=>{
 
 let c=document.createElement("div")
 
 c.className="card"
-
-c.innerText=i
+c.innerText=f
 
 foods.appendChild(c)
 
@@ -402,57 +390,26 @@ recipeList.innerHTML=""
 
 let recipes=[]
 
-if(ingredients.includes("Ei"))recipes.push("Omelett")
+if(ingredients.includes("Apfel"))recipes.push("Fruchtsalat")
 
-if(ingredients.includes("Tomate"))recipes.push("Tomaten Pasta")
+if(ingredients.includes("Banane"))recipes.push("Bananen Pancakes")
 
-if(ingredients.includes("Käse"))recipes.push("Käse Sandwich")
+if(ingredients.includes("Sandwich"))recipes.push("Sandwich Toast")
 
-if(recipes.length==0)recipes=["Salat","Pasta","Gemüsepfanne"]
+if(recipes.length==0){
+recipes=["Omelett","Pasta","Gemüsepfanne"]
+}
 
 recipes.forEach(r=>{
 
-let f=document.createElement("div")
+let el=document.createElement("div")
 
-f.className="food"
+el.className="food"
+el.innerText=r
 
-f.innerText=r
-
-f.draggable=true
-
-f.ondragstart=drag
-
-recipeList.appendChild(f)
+recipeList.appendChild(el)
 
 })
-
-}
-
-function allowDrop(e){
-
-e.preventDefault()
-
-}
-
-function drag(e){
-
-e.dataTransfer.setData("text",e.target.innerText)
-
-}
-
-function drop(e){
-
-e.preventDefault()
-
-let d=e.dataTransfer.getData("text")
-
-let f=document.createElement("div")
-
-f.className="food"
-
-f.innerText=d
-
-e.target.appendChild(f)
 
 }
 
