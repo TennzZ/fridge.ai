@@ -1,155 +1,135 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>FridgeAI</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
-}
-
 body{
-
-background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
+margin:0;
+font-family:Arial;
+background-image:url("https://images.unsplash.com/photo-1542838132-92c53300491e");
 background-size:cover;
-background-position:center;
 color:white;
-min-height:100vh;
-
 }
 
 .overlay{
-
-background:rgba(0,0,0,0.7);
+background:rgba(0,0,0,0.75);
 min-height:100vh;
+}
+
+.center{
 display:flex;
-
-}
-
-.sidebar{
-
-width:230px;
-background:#111827;
-padding:30px;
-
-}
-
-.sidebar h2{
-margin-bottom:30px;
-}
-
-.sidebar div{
-
-margin:15px 0;
-opacity:0.8;
-cursor:pointer;
-transition:0.3s;
-
-}
-
-.sidebar div:hover{
-
-opacity:1;
-
-}
-
-.main{
-
-flex:1;
-padding:40px;
-text-align:center;
-
-}
-
-button{
-
-padding:14px 24px;
-border:none;
-border-radius:10px;
-background:#22c55e;
-color:white;
-font-size:15px;
-margin:10px;
-cursor:pointer;
-transition:0.3s;
-
-}
-
-button:hover{
-
-transform:scale(1.05);
-
-}
-
-video{
-
-width:500px;
-border-radius:15px;
-margin-top:20px;
-
-}
-
-.cards{
-
-display:flex;
-flex-wrap:wrap;
 justify-content:center;
-gap:12px;
-margin-top:20px;
-
-}
-
-.card{
-
-background:rgba(255,255,255,0.15);
-padding:10px 15px;
-border-radius:10px;
-
+align-items:center;
+height:100vh;
 }
 
 .login{
-
-position:absolute;
-top:20px;
-right:30px;
-
+background:#111827;
+padding:30px;
+border-radius:10px;
+width:320px;
+text-align:center;
 }
 
 input{
-
-padding:8px;
-margin:4px;
-border-radius:5px;
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:6px;
 border:none;
-
 }
 
-.section{
-
-margin-top:35px;
-
+button{
+padding:10px 20px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:white;
+cursor:pointer;
 }
 
-.plan-card{
+.app{
+display:none;
+}
 
+.sidebar{
+position:fixed;
+left:0;
+top:0;
+width:200px;
+height:100%;
+background:#111827;
+padding:20px;
+}
+
+.sidebar div{
+margin:15px 0;
+cursor:pointer;
+}
+
+.content{
+margin-left:220px;
+padding:40px;
+text-align:center;
+}
+
+video{
+width:450px;
+border-radius:10px;
+}
+
+.card{
 background:#1f2937;
-padding:10px 15px;
-border-radius:8px;
+padding:8px 12px;
 margin:5px;
+border-radius:6px;
+display:inline-block;
+}
 
+.plan{
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+.day{
+background:#1f2937;
+padding:15px;
+width:150px;
+min-height:120px;
+border-radius:10px;
+}
+
+.food{
+background:#22c55e;
+margin:5px;
+padding:5px;
+border-radius:6px;
+cursor:grab;
+}
+
+.shopItem{
+background:#1f2937;
+margin:5px;
+padding:8px;
+border-radius:6px;
+}
+
+.done{
+text-decoration:line-through;
+opacity:0.6;
 }
 
 </style>
@@ -160,67 +140,85 @@ margin:5px;
 
 <div class="overlay">
 
-<div class="sidebar">
-
-<h2>FridgeAI</h2>
-
-<div>🏠 Dashboard</div>
-<div>📷 Kühlschrank Scan</div>
-<div>📅 Essensplan</div>
-<div>🛒 Einkaufsliste</div>
-<div>⚙️ Einstellungen</div>
-
-</div>
-
-<div class="main">
+<div id="loginScreen" class="center">
 
 <div class="login">
 
-<input placeholder="Email">
-<input type="password" placeholder="Passwort">
-<button>Login</button>
+<h2>FridgeAI</h2>
+
+<input id="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Passwort">
+
+<button onclick="register()">Registrieren</button>
+<button onclick="login()">Login</button>
 
 </div>
 
-<h1>🥗 FridgeAI Kühlschrank Scanner</h1>
+</div>
 
-<button onclick="startCamera()">📷 Kamera starten</button>
-<button onclick="analyze()">🤖 Kühlschrank analysieren</button>
+<div id="app" class="app">
 
-<br>
+<div class="sidebar">
+
+<h3>FridgeAI</h3>
+
+<div onclick="show('scan')">📷 Scan</div>
+<div onclick="show('plan')">📅 Essensplan</div>
+<div onclick="show('shop')">🛒 Einkauf</div>
+<div onclick="logout()">Logout</div>
+
+</div>
+
+<div class="content">
+
+<h1>Kühlschrank Scanner</h1>
+
+<button onclick="startCamera()">Kamera starten</button>
+<button onclick="scan()">Analysieren</button>
+
+<br><br>
 
 <video id="video" autoplay></video>
 <canvas id="canvas" style="display:none"></canvas>
 
-<div class="section">
+<h2>Zutaten</h2>
+<div id="foods"></div>
 
-<h2>🥕 Erkannte Zutaten</h2>
-<div id="ingredients" class="cards"></div>
+<h3>Lebensmittel hinzufügen</h3>
+
+<input id="newFood" placeholder="z.B. Tomaten">
+
+<button onclick="addFood()">Hinzufügen</button>
+
+<h2>Rezepte</h2>
+
+<input id="search" placeholder="Rezept suchen">
+
+<button onclick="searchRecipe()">Suchen</button>
+
+<div id="recipes"></div>
+
+<h2>Essensplan</h2>
+
+<div class="plan">
+
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
 
 </div>
 
-<div class="section">
+<h2>Einkaufsliste</h2>
 
-<h2>🍳 Rezepte</h2>
-<div id="recipes" class="cards"></div>
+<input id="shopInput" placeholder="z.B. Milch">
 
-</div>
+<button onclick="addShop()">Hinzufügen</button>
 
-<div class="section">
-
-<h2>🛒 Fehlende Zutaten</h2>
-<div id="shopping" class="cards"></div>
+<div id="shopList"></div>
 
 </div>
-
-<div class="section">
-
-<h2>📅 Essensplan</h2>
-<div id="plan"></div>
-
-</div>
-
-<div id="days"></div>
 
 </div>
 
@@ -229,9 +227,10 @@ margin:5px;
 <script>
 
 let video=document.getElementById("video")
-let canvas=document.getElementById("canvas")
-
 let model
+
+let ingredients=[]
+let shopping=[]
 
 async function loadModel(){
 
@@ -241,22 +240,58 @@ model=await cocoSsd.load()
 
 loadModel()
 
-async function startCamera(){
+function register(){
 
-try{
+localStorage.setItem("user",
+
+JSON.stringify({
+
+email:email.value,
+pass:pass.value
+
+})
+
+)
+
+alert("Registriert")
+
+}
+
+function login(){
+
+let u=JSON.parse(localStorage.getItem("user"))
+
+if(!u)return alert("Kein Account")
+
+if(u.email==email.value && u.pass==pass.value){
+
+loginScreen.style.display="none"
+app.style.display="block"
+
+}else{
+
+alert("Falsche Daten")
+
+}
+
+}
+
+function logout(){
+
+location.reload()
+
+}
+
+async function startCamera(){
 
 const stream=await navigator.mediaDevices.getUserMedia({video:true})
 video.srcObject=stream
 
-}catch{
-
-alert("Bitte Kamera erlauben")
-
 }
 
-}
+async function scan(){
 
-async function analyze(){
+const canvas=document.getElementById("canvas")
 
 canvas.width=video.videoWidth
 canvas.height=video.videoHeight
@@ -265,110 +300,159 @@ const ctx=canvas.getContext("2d")
 
 ctx.drawImage(video,0,0)
 
-const predictions=await model.detect(canvas)
+const preds=await model.detect(canvas)
 
-let detected=[]
+preds.forEach(p=>{
 
-predictions.forEach(p=>{
-
-detected.push(p.class)
+ingredients.push(p.class)
 
 })
 
-displayIngredients(detected)
-generateRecipes(detected)
-generateShopping(detected)
-generatePlan()
-
-document.getElementById("days").innerText=
-"📅 Essen reicht ungefähr "+Math.max(1,Math.floor(detected.length/2))+" Tage"
+renderFoods()
+generateRecipes()
 
 }
 
-function displayIngredients(list){
+function addFood(){
 
-const div=document.getElementById("ingredients")
-div.innerHTML=""
+ingredients.push(newFood.value)
 
-list.forEach(i=>{
+renderFoods()
+generateRecipes()
 
-const card=document.createElement("div")
+}
+
+function renderFoods(){
+
+foods.innerHTML=""
+
+ingredients.forEach(f=>{
+
+let card=document.createElement("div")
+
 card.className="card"
-card.innerText=i
+card.innerText=f
 
-div.appendChild(card)
+foods.appendChild(card)
 
 })
 
 }
 
-function generateRecipes(list){
+function generateRecipes(){
 
-let meals=[]
+recipes.innerHTML=""
 
-if(list.includes("banana")) meals.push("Bananen Pancakes")
-if(list.includes("apple")) meals.push("Apfel Dessert")
-if(list.includes("sandwich")) meals.push("Sandwich")
-if(list.includes("bottle")) meals.push("Milch Rezept")
-
-if(meals.length==0){
-
-meals=["Omelett","Pasta","Sandwich"]
-
-}
-
-const div=document.getElementById("recipes")
-div.innerHTML=""
+let meals=["Pasta","Salat","Sandwich","Omelett"]
 
 meals.forEach(m=>{
 
-const card=document.createElement("div")
-card.className="card"
-card.innerText="🍳 "+m
+let food=document.createElement("div")
 
-div.appendChild(card)
+food.className="food"
+food.draggable=true
+food.innerText=m
+food.ondragstart=drag
 
-})
-
-}
-
-function generateShopping(list){
-
-let needed=["Spaghetti","Parmesan","Tomaten"]
-
-const div=document.getElementById("shopping")
-div.innerHTML=""
-
-needed.forEach(n=>{
-
-const card=document.createElement("div")
-card.className="card"
-card.innerText=n
-
-div.appendChild(card)
+recipes.appendChild(food)
 
 })
 
 }
 
-function generatePlan(){
+function searchRecipe(){
 
-const days=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"]
+let q=search.value.toLowerCase()
 
-const meals=["Omelett","Pasta","Sandwich","Salat","Pfannkuchen"]
+recipes.innerHTML=""
 
-const div=document.getElementById("plan")
-div.innerHTML=""
+let all=["Pasta","Salat","Sandwich","Omelett","Pizza"]
 
-for(let i=0;i<days.length;i++){
+all.filter(r=>r.toLowerCase().includes(q))
 
-const card=document.createElement("div")
-card.className="plan-card"
-card.innerText=days[i]+" : "+meals[i]
+.forEach(r=>{
 
-div.appendChild(card)
+let f=document.createElement("div")
+
+f.className="food"
+f.draggable=true
+f.innerText=r
+f.ondragstart=drag
+
+recipes.appendChild(f)
+
+})
 
 }
+
+function allowDrop(ev){
+
+ev.preventDefault()
+
+}
+
+function drag(ev){
+
+ev.dataTransfer.setData("text",ev.target.innerText)
+
+}
+
+function drop(ev){
+
+ev.preventDefault()
+
+let data=ev.dataTransfer.getData("text")
+
+let food=document.createElement("div")
+
+food.className="food"
+food.innerText=data
+
+ev.target.appendChild(food)
+
+}
+
+function addShop(){
+
+shopping.push(shopInput.value)
+
+renderShop()
+
+}
+
+function renderShop(){
+
+shopList.innerHTML=""
+
+shopping.forEach((item,i)=>{
+
+let el=document.createElement("div")
+
+el.className="shopItem"
+
+el.innerHTML=`
+<input type="checkbox" onchange="toggle(${i})">
+${item}
+<button onclick="removeShop(${i})">X</button>
+`
+
+shopList.appendChild(el)
+
+})
+
+}
+
+function toggle(i){
+
+document.getElementsByClassName("shopItem")[i].classList.toggle("done")
+
+}
+
+function removeShop(i){
+
+shopping.splice(i,1)
+
+renderShop()
 
 }
 
