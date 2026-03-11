@@ -1,0 +1,216 @@
+import { useState, useRef } from "react";
+
+/**
+ * FridgeAI – Demo Startup Style App
+ * ---------------------------------
+ * Features:
+ * - Camera fridge scan
+ * - Ingredient detection (demo AI)
+ * - Recipe suggestions
+ * - Food duration estimate
+ * - Animated UI + selection
+ */
+
+function generateRecipes(list = []) {
+  const meals = [];
+
+  if (list.includes("Eier") && list.includes("Käse")) meals.push("Käse Omelett");
+  if (list.includes("Brot") && list.includes("Käse")) meals.push("Gegrilltes Käsebrot");
+  if (list.includes("Tomaten") && list.includes("Eier")) meals.push("Tomaten Rührei");
+  if (list.includes("Milch") && list.includes("Eier")) meals.push("Pfannkuchen");
+
+  if (list.includes("Tomaten") && list.includes("Brot")) meals.push("Tomaten Sandwich");
+
+  return meals;
+}
+
+function estimateDays(list = []) {
+  return Math.max(1, Math.floor(list.length / 2));
+}
+
+export default function FridgeAI() {
+  const videoRef = useRef(null);
+
+  const [cameraActive, setCameraActive] = useState(false);
+  const [ingredients, setIngredients] = useState([]);
+  const [recipes, setRecipes] = useState([]);
+  const [days, setDays] = useState(null);
+
+  const [selected, setSelected] = useState(null);
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      setCameraActive(true);
+    } catch (err) {
+      alert("Kamera Zugriff verweigert. Bitte Kamera erlauben.");
+    }
+  }
+
+  function scanFridge() {
+    // Demo AI result
+
+    const detected = ["Eier", "Milch", "Käse", "Tomaten", "Brot"];
+
+    setIngredients(detected);
+
+    const meals = generateRecipes(detected);
+
+    setRecipes(meals);
+    setDays(estimateDays(detected));
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        fontFamily: "system-ui",
+        backgroundImage:
+          "url(https://images.unsplash.com/photo-1542838132-92c53300491e)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: 40,
+        color: "white",
+      }}
+    >
+      <div
+        style={{
+          backdropFilter: "blur(10px)",
+          background: "rgba(0,0,0,0.5)",
+          padding: 30,
+          borderRadius: 20,
+          maxWidth: 900,
+          margin: "auto",
+        }}
+      >
+        <h1 style={{ fontSize: 40, marginBottom: 10 }}>🥗 FridgeAI</h1>
+
+        <p style={{ opacity: 0.8, marginBottom: 30 }}>
+          Scanne deinen Kühlschrank und erhalte automatisch Rezeptvorschläge.
+        </p>
+
+        <button
+          onClick={startCamera}
+          style={{
+            padding: "12px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "#22c55e",
+            color: "white",
+            fontSize: 16,
+            cursor: "pointer",
+            marginRight: 10,
+          }}
+        >
+          Kamera starten
+        </button>
+
+        {cameraActive && (
+          <button
+            onClick={scanFridge}
+            style={{
+              padding: "12px 20px",
+              borderRadius: 10,
+              border: "none",
+              background: "#3b82f6",
+              color: "white",
+              fontSize: 16,
+              cursor: "pointer",
+            }}
+          >
+            Kühlschrank scannen
+          </button>
+        )}
+
+        <div style={{ marginTop: 30 }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            style={{ width: "100%", borderRadius: 20 }}
+          />
+        </div>
+
+        {ingredients.length > 0 && (
+          <div style={{ marginTop: 40 }}>
+            <h2>Erkannte Zutaten</h2>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {ingredients.map((item, i) => (
+                <div
+                  key={i}
+                  onClick={() => setSelected(item)}
+                  style={{
+                    padding: "10px 14px",
+                    background:
+                      selected === item ? "#22c55e" : "rgba(255,255,255,0.2)",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {recipes.length > 0 && (
+          <div style={{ marginTop: 40 }}>
+            <h2>Was du kochen kannst</h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+                gap: 20,
+              }}
+            >
+              {recipes.map((r, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    padding: 20,
+                    borderRadius: 15,
+                    transform: "scale(1)",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  🍳 {r}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {days && (
+          <div style={{ marginTop: 40, fontSize: 20 }}>
+            📅 Dein Essen reicht ungefähr <b>{days} Tage</b>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tests
+ */
+
+function runTests() {
+  const meals = generateRecipes(["Eier", "Käse"]);
+
+  console.assert(meals.includes("Käse Omelett"), "Omelett Test fehlgeschlagen");
+
+  const d = estimateDays(["Eier", "Milch", "Brot", "Käse"]);
+
+  console.assert(d === 2, "Days calculation failed");
+}
+
+runTests();
