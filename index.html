@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>FridgeAI</title>
 
 <style>
@@ -113,11 +114,14 @@ border:none;
 <body>
 
 <div class="sidebar">
+
 <h2>FridgeAI</h2>
+
 <button onclick="showPage('scan')">📷 Analyse</button>
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
 <button onclick="showPage('plan')">📅 Wochenplan</button>
 <button onclick="showPage('shop')">🛒 Einkaufsliste</button>
+
 </div>
 
 <div class="content">
@@ -142,6 +146,10 @@ border:none;
 <div class="overlay">
 
 <h1>Rezepte</h1>
+
+<div id="premiumMessage"></div>
+
+<button onclick="activatePremium()">Premium aktivieren</button>
 
 <div id="recipeList"></div>
 
@@ -173,6 +181,9 @@ border:none;
 
 <h1>Einkaufsliste</h1>
 
+<input id="shopInput" placeholder="Produkt hinzufügen">
+<button onclick="addShopping()">Hinzufügen</button>
+
 <div id="shoppingList"></div>
 
 </div>
@@ -184,6 +195,7 @@ border:none;
 
 let ingredients=[]
 let shopping=[]
+let premium=false
 
 let recipes=[
 {name:"Omelett",needs:["Ei","Käse"]},
@@ -235,9 +247,25 @@ ingredientList.appendChild(el)
 
 }
 
+function activatePremium(){
+
+premium=true
+generateRecipes()
+
+}
+
 function generateRecipes(){
 
 recipeList.innerHTML=""
+
+if(!premium){
+
+premiumMessage.innerHTML="🔒 Rezepte nur mit Premium Abo"
+return
+
+}
+
+premiumMessage.innerHTML=""
 
 recipes.forEach(r=>{
 
@@ -272,11 +300,20 @@ el.innerText=recipe.name
 e.target.appendChild(el)
 
 recipe.needs.forEach(n=>{
+
 if(!ingredients.includes(n) && !shopping.includes(n)){
 shopping.push(n)
 }
+
 })
 
+renderShopping()
+
+}
+
+function addShopping(){
+
+shopping.push(shopInput.value)
 renderShopping()
 
 }
@@ -285,12 +322,23 @@ function renderShopping(){
 
 shoppingList.innerHTML=""
 
-shopping.forEach(i=>{
+shopping.forEach((i,index)=>{
+
 let el=document.createElement("div")
 el.className="card"
-el.innerText=i
+
+el.innerHTML=i+" <button onclick='removeItem("+index+")'>X</button>"
+
 shoppingList.appendChild(el)
+
 })
+
+}
+
+function removeItem(i){
+
+shopping.splice(i,1)
+renderShopping()
 
 }
 
