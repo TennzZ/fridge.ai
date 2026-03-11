@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>FridgeAI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
@@ -31,31 +33,44 @@ min-height:100vh;
 
 .overlay{
 
-background:rgba(0,0,0,0.65);
+background:rgba(0,0,0,0.7);
 min-height:100vh;
-padding:40px;
+display:flex;
 
 }
 
-.container{
+.sidebar{
 
-max-width:1000px;
-margin:auto;
-text-align:center;
-
-}
-
-h1{
-
-font-size:48px;
-margin-bottom:10px;
+width:230px;
+background:#111827;
+padding:30px;
 
 }
 
-.subtitle{
-
-opacity:0.8;
+.sidebar h2{
 margin-bottom:30px;
+}
+
+.sidebar div{
+
+margin:15px 0;
+opacity:0.8;
+cursor:pointer;
+transition:0.3s;
+
+}
+
+.sidebar div:hover{
+
+opacity:1;
+
+}
+
+.main{
+
+flex:1;
+padding:40px;
+text-align:center;
 
 }
 
@@ -63,23 +78,13 @@ button{
 
 padding:14px 24px;
 border:none;
-border-radius:12px;
-font-size:16px;
-margin:6px;
+border-radius:10px;
+background:#22c55e;
+color:white;
+font-size:15px;
+margin:10px;
 cursor:pointer;
 transition:0.3s;
-
-}
-
-.start{
-
-background:#22c55e;
-
-}
-
-.scan{
-
-background:#3b82f6;
 
 }
 
@@ -91,16 +96,9 @@ transform:scale(1.05);
 
 video{
 
-width:100%;
-border-radius:16px;
+width:500px;
+border-radius:15px;
 margin-top:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.5);
-
-}
-
-.section{
-
-margin-top:40px;
 
 }
 
@@ -109,46 +107,48 @@ margin-top:40px;
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:15px;
-margin-top:15px;
+gap:12px;
+margin-top:20px;
 
 }
 
 .card{
 
 background:rgba(255,255,255,0.15);
-padding:14px 20px;
+padding:10px 15px;
 border-radius:10px;
-cursor:pointer;
-transition:0.3s;
-backdrop-filter:blur(10px);
 
 }
 
-.card:hover{
+.login{
 
-transform:translateY(-5px);
-background:rgba(255,255,255,0.25);
-
-}
-
-.result{
-
-margin-top:30px;
-font-size:22px;
+position:absolute;
+top:20px;
+right:30px;
 
 }
 
-.fade{
+input{
 
-animation:fade 0.6s ease;
+padding:8px;
+margin:4px;
+border-radius:5px;
+border:none;
 
 }
 
-@keyframes fade{
+.section{
 
-from{opacity:0; transform:translateY(10px);}
-to{opacity:1; transform:translateY(0);}
+margin-top:35px;
+
+}
+
+.plan-card{
+
+background:#1f2937;
+padding:10px 15px;
+border-radius:8px;
+margin:5px;
 
 }
 
@@ -160,29 +160,48 @@ to{opacity:1; transform:translateY(0);}
 
 <div class="overlay">
 
-<div class="container">
+<div class="sidebar">
 
-<h1>🥗 FridgeAI</h1>
+<h2>FridgeAI</h2>
 
-<p class="subtitle">
-Scanne deinen Kühlschrank und entdecke Rezepte mit KI
-</p>
+<div>🏠 Dashboard</div>
+<div>📷 Kühlschrank Scan</div>
+<div>📅 Essensplan</div>
+<div>🛒 Einkaufsliste</div>
+<div>⚙️ Einstellungen</div>
 
-<button class="start" onclick="startCamera()">📷 Kamera starten</button>
-<button class="scan" onclick="scanFridge()">🤖 Kühlschrank analysieren</button>
+</div>
+
+<div class="main">
+
+<div class="login">
+
+<input placeholder="Email">
+<input type="password" placeholder="Passwort">
+<button>Login</button>
+
+</div>
+
+<h1>🥗 FridgeAI Kühlschrank Scanner</h1>
+
+<button onclick="startCamera()">📷 Kamera starten</button>
+<button onclick="analyze()">🤖 Kühlschrank analysieren</button>
+
+<br>
 
 <video id="video" autoplay></video>
+<canvas id="canvas" style="display:none"></canvas>
 
 <div class="section">
 
-<h2>🥕 Erkannte Lebensmittel</h2>
+<h2>🥕 Erkannte Zutaten</h2>
 <div id="ingredients" class="cards"></div>
 
 </div>
 
 <div class="section">
 
-<h2>🍳 Mögliche Gerichte</h2>
+<h2>🍳 Rezepte</h2>
 <div id="recipes" class="cards"></div>
 
 </div>
@@ -197,11 +216,11 @@ Scanne deinen Kühlschrank und entdecke Rezepte mit KI
 <div class="section">
 
 <h2>📅 Essensplan</h2>
-<div id="plan" class="cards"></div>
+<div id="plan"></div>
 
 </div>
 
-<div id="days" class="result"></div>
+<div id="days"></div>
 
 </div>
 
@@ -210,6 +229,17 @@ Scanne deinen Kühlschrank und entdecke Rezepte mit KI
 <script>
 
 let video=document.getElementById("video")
+let canvas=document.getElementById("canvas")
+
+let model
+
+async function loadModel(){
+
+model=await cocoSsd.load()
+
+}
+
+loadModel()
 
 async function startCamera(){
 
@@ -226,39 +256,45 @@ alert("Bitte Kamera erlauben")
 
 }
 
-function scanFridge(){
+async function analyze(){
 
-const detected=[
-"Eier",
-"Milch",
-"Käse",
-"Tomaten",
-"Brot"
-]
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
 
-showIngredients(detected)
+const ctx=canvas.getContext("2d")
 
+ctx.drawImage(video,0,0)
+
+const predictions=await model.detect(canvas)
+
+let detected=[]
+
+predictions.forEach(p=>{
+
+detected.push(p.class)
+
+})
+
+displayIngredients(detected)
 generateRecipes(detected)
-
 generateShopping(detected)
-
 generatePlan()
 
 document.getElementById("days").innerText=
-"📅 Dein Essen reicht ungefähr "+Math.floor(detected.length/2)+" Tage"
+"📅 Essen reicht ungefähr "+Math.max(1,Math.floor(detected.length/2))+" Tage"
 
 }
 
-function showIngredients(list){
+function displayIngredients(list){
 
 const div=document.getElementById("ingredients")
 div.innerHTML=""
 
-list.forEach(item=>{
+list.forEach(i=>{
 
 const card=document.createElement("div")
-card.className="card fade"
-card.innerText=item
+card.className="card"
+card.innerText=i
 
 div.appendChild(card)
 
@@ -270,17 +306,16 @@ function generateRecipes(list){
 
 let meals=[]
 
-if(list.includes("Eier") && list.includes("Käse"))
-meals.push("Käse Omelett")
+if(list.includes("banana")) meals.push("Bananen Pancakes")
+if(list.includes("apple")) meals.push("Apfel Dessert")
+if(list.includes("sandwich")) meals.push("Sandwich")
+if(list.includes("bottle")) meals.push("Milch Rezept")
 
-if(list.includes("Brot") && list.includes("Käse"))
-meals.push("Gegrilltes Käsebrot")
+if(meals.length==0){
 
-if(list.includes("Milch") && list.includes("Eier"))
-meals.push("Pfannkuchen")
+meals=["Omelett","Pasta","Sandwich"]
 
-if(list.includes("Tomaten"))
-meals.push("Tomaten Sandwich")
+}
 
 const div=document.getElementById("recipes")
 div.innerHTML=""
@@ -288,7 +323,7 @@ div.innerHTML=""
 meals.forEach(m=>{
 
 const card=document.createElement("div")
-card.className="card fade"
+card.className="card"
 card.innerText="🍳 "+m
 
 div.appendChild(card)
@@ -299,13 +334,7 @@ div.appendChild(card)
 
 function generateShopping(list){
 
-let needed=[]
-
-if(!list.includes("Spaghetti"))
-needed.push("Spaghetti")
-
-if(!list.includes("Parmesan"))
-needed.push("Parmesan")
+let needed=["Spaghetti","Parmesan","Tomaten"]
 
 const div=document.getElementById("shopping")
 div.innerHTML=""
@@ -313,7 +342,7 @@ div.innerHTML=""
 needed.forEach(n=>{
 
 const card=document.createElement("div")
-card.className="card fade"
+card.className="card"
 card.innerText=n
 
 div.appendChild(card)
@@ -324,19 +353,9 @@ div.appendChild(card)
 
 function generatePlan(){
 
-const meals=[
-"Omelett",
-"Pasta",
-"Sandwich",
-"Pfannkuchen"
-]
+const days=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"]
 
-const days=[
-"Montag",
-"Dienstag",
-"Mittwoch",
-"Donnerstag"
-]
+const meals=["Omelett","Pasta","Sandwich","Salat","Pfannkuchen"]
 
 const div=document.getElementById("plan")
 div.innerHTML=""
@@ -344,8 +363,8 @@ div.innerHTML=""
 for(let i=0;i<days.length;i++){
 
 const card=document.createElement("div")
-card.className="card fade"
-card.innerText=days[i]+": "+meals[i]
+card.className="plan-card"
+card.innerText=days[i]+" : "+meals[i]
 
 div.appendChild(card)
 
@@ -356,5 +375,4 @@ div.appendChild(card)
 </script>
 
 </body>
-
 </html>
