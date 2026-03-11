@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -24,7 +23,7 @@ padding:20px;
 
 .loginBg{background-image:url("https://images.unsplash.com/photo-1490818387583-1baba5e638af");}
 scanBg{background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");}
-.recipeBg{background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c");}
+recipeBg{background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c");}
 planBg{background-image:url("https://images.unsplash.com/photo-1556910103-1c02745aae4d");}
 shopBg{background-image:url("https://images.unsplash.com/photo-1506617420156-8e4536971650");}
 
@@ -71,18 +70,10 @@ border-radius:6px;
 display:inline-block;
 }
 
-.recipe{
-background:#22c55e;
-padding:8px;
-margin:5px;
-border-radius:6px;
-cursor:grab;
-}
-
 .day{
 background:#1f2937;
 width:140px;
-min-height:150px;
+min-height:120px;
 margin:5px;
 padding:10px;
 border-radius:10px;
@@ -103,7 +94,7 @@ color:white;
 cursor:pointer;
 }
 
-input{
+input,select{
 padding:10px;
 margin:5px;
 border-radius:6px;
@@ -111,19 +102,40 @@ border:none;
 }
 
 </style>
-
 </head>
 
 <body>
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="pageBg loginBg">
+
+<div class="overlay">
+
+<h1>FridgeAI Login</h1>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Passwort">
+
+<button onclick="register()">Registrieren</button>
+<button onclick="login()">Login</button>
+
+</div>
+
+</div>
+
+<!-- APP -->
+
+<div id="app" style="display:none">
 
 <div class="sidebar">
 
 <h2>FridgeAI</h2>
 
-<button onclick="showPage('scan')">📷 Analyse</button>
-<button onclick="showPage('recipes')">🍳 Rezepte</button>
-<button onclick="showPage('plan')">📅 Wochenplan</button>
-<button onclick="showPage('shop')">🛒 Einkaufsliste</button>
+<button onclick="showPage('scan')">Analyse</button>
+<button onclick="showPage('recipes')">Rezepte</button>
+<button onclick="showPage('plan')">Wochenplan</button>
+<button onclick="showPage('shop')">Einkaufsliste</button>
 
 </div>
 
@@ -148,14 +160,14 @@ border:none;
 <div id="recipes" class="page pageBg recipeBg">
 <div class="overlay">
 
-<h1>Rezepte</h1>
-
-<h3>Eigenes Rezept erstellen</h3>
+<h1>Rezepte erstellen</h1>
 
 <input id="recipeName" placeholder="Rezeptname">
 <input id="recipeIngredients" placeholder="Zutaten (Komma getrennt)">
 
-<button onclick="addRecipe()">Rezept erstellen</button>
+<button onclick="addRecipe()">Rezept speichern</button>
+
+<h2>Rezepte</h2>
 
 <div id="recipeList"></div>
 
@@ -171,15 +183,33 @@ border:none;
 
 <div class="plan">
 
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Montag</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Dienstag</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Mittwoch</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Donnerstag</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Freitag</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Samstag</div>
-<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Sonntag</div>
+<div class="day" id="Montag">Montag</div>
+<div class="day" id="Dienstag">Dienstag</div>
+<div class="day" id="Mittwoch">Mittwoch</div>
+<div class="day" id="Donnerstag">Donnerstag</div>
+<div class="day" id="Freitag">Freitag</div>
+<div class="day" id="Samstag">Samstag</div>
+<div class="day" id="Sonntag">Sonntag</div>
 
 </div>
+
+<h2>Rezept einplanen</h2>
+
+<select id="recipeSelect"></select>
+
+<select id="daySelect">
+
+<option>Montag</option>
+<option>Dienstag</option>
+<option>Mittwoch</option>
+<option>Donnerstag</option>
+<option>Freitag</option>
+<option>Samstag</option>
+<option>Sonntag</option>
+
+</select>
+
+<button onclick="addToPlan()">Zum Plan hinzufügen</button>
 
 </div>
 </div>
@@ -202,6 +232,8 @@ border:none;
 
 </div>
 
+</div>
+
 <script>
 
 let ingredients=[]
@@ -210,9 +242,35 @@ let recipes=[]
 
 let foods=["Apfel","Banane","Tomate","Ei","Käse","Brot","Reis","Pasta","Salat","Hähnchen"]
 
+function register(){
+
+localStorage.setItem("user",
+JSON.stringify({email:email.value,password:password.value})
+)
+
+alert("Registriert")
+
+}
+
+function login(){
+
+let user=JSON.parse(localStorage.getItem("user"))
+
+if(user && user.email===email.value && user.password===password.value){
+
+loginPage.style.display="none"
+app.style.display="block"
+
+}
+
+}
+
 function showPage(id){
+
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+
 document.getElementById(id).classList.add("active")
+
 }
 
 function analyze(){
@@ -261,45 +319,38 @@ renderRecipes()
 function renderRecipes(){
 
 recipeList.innerHTML=""
+recipeSelect.innerHTML=""
 
 recipes.forEach(r=>{
 
 let el=document.createElement("div")
 
-el.className="recipe"
+el.className="card"
 el.innerText=r.name
-el.draggable=true
-
-el.ondragstart=(e)=>{
-
-e.dataTransfer.setData("recipe",JSON.stringify(r))
-
-}
 
 recipeList.appendChild(el)
+
+let opt=document.createElement("option")
+opt.text=r.name
+recipeSelect.add(opt)
 
 })
 
 }
 
-function allowDrop(e){
+function addToPlan(){
 
-e.preventDefault()
-
-}
-
-function dropRecipe(e){
-
-e.preventDefault()
-
-let recipe=JSON.parse(e.dataTransfer.getData("recipe"))
+let recipeName=recipeSelect.value
+let day=daySelect.value
 
 let el=document.createElement("div")
 
 el.className="card"
-el.innerText=recipe.name
+el.innerText=recipeName
 
-e.target.appendChild(el)
+document.getElementById(day).appendChild(el)
+
+let recipe=recipes.find(r=>r.name===recipeName)
 
 recipe.ingredients.forEach(i=>{
 
