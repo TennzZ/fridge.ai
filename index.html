@@ -1,216 +1,360 @@
-import { useState, useRef } from "react";
+<!DOCTYPE html>
+<html lang="de">
 
-/**
- * FridgeAI – Demo Startup Style App
- * ---------------------------------
- * Features:
- * - Camera fridge scan
- * - Ingredient detection (demo AI)
- * - Recipe suggestions
- * - Food duration estimate
- * - Animated UI + selection
- */
+<head>
 
-function generateRecipes(list = []) {
-  const meals = [];
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  if (list.includes("Eier") && list.includes("Käse")) meals.push("Käse Omelett");
-  if (list.includes("Brot") && list.includes("Käse")) meals.push("Gegrilltes Käsebrot");
-  if (list.includes("Tomaten") && list.includes("Eier")) meals.push("Tomaten Rührei");
-  if (list.includes("Milch") && list.includes("Eier")) meals.push("Pfannkuchen");
+<title>FridgeAI</title>
 
-  if (list.includes("Tomaten") && list.includes("Brot")) meals.push("Tomaten Sandwich");
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
-  return meals;
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
 }
 
-function estimateDays(list = []) {
-  return Math.max(1, Math.floor(list.length / 2));
+body{
+
+background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
+background-size:cover;
+background-position:center;
+color:white;
+min-height:100vh;
+
 }
 
-export default function FridgeAI() {
-  const videoRef = useRef(null);
+.overlay{
 
-  const [cameraActive, setCameraActive] = useState(false);
-  const [ingredients, setIngredients] = useState([]);
-  const [recipes, setRecipes] = useState([]);
-  const [days, setDays] = useState(null);
+background:rgba(0,0,0,0.65);
+min-height:100vh;
+padding:40px;
 
-  const [selected, setSelected] = useState(null);
-
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      setCameraActive(true);
-    } catch (err) {
-      alert("Kamera Zugriff verweigert. Bitte Kamera erlauben.");
-    }
-  }
-
-  function scanFridge() {
-    // Demo AI result
-
-    const detected = ["Eier", "Milch", "Käse", "Tomaten", "Brot"];
-
-    setIngredients(detected);
-
-    const meals = generateRecipes(detected);
-
-    setRecipes(meals);
-    setDays(estimateDays(detected));
-  }
-
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        fontFamily: "system-ui",
-        backgroundImage:
-          "url(https://images.unsplash.com/photo-1542838132-92c53300491e)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        padding: 40,
-        color: "white",
-      }}
-    >
-      <div
-        style={{
-          backdropFilter: "blur(10px)",
-          background: "rgba(0,0,0,0.5)",
-          padding: 30,
-          borderRadius: 20,
-          maxWidth: 900,
-          margin: "auto",
-        }}
-      >
-        <h1 style={{ fontSize: 40, marginBottom: 10 }}>🥗 FridgeAI</h1>
-
-        <p style={{ opacity: 0.8, marginBottom: 30 }}>
-          Scanne deinen Kühlschrank und erhalte automatisch Rezeptvorschläge.
-        </p>
-
-        <button
-          onClick={startCamera}
-          style={{
-            padding: "12px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: "#22c55e",
-            color: "white",
-            fontSize: 16,
-            cursor: "pointer",
-            marginRight: 10,
-          }}
-        >
-          Kamera starten
-        </button>
-
-        {cameraActive && (
-          <button
-            onClick={scanFridge}
-            style={{
-              padding: "12px 20px",
-              borderRadius: 10,
-              border: "none",
-              background: "#3b82f6",
-              color: "white",
-              fontSize: 16,
-              cursor: "pointer",
-            }}
-          >
-            Kühlschrank scannen
-          </button>
-        )}
-
-        <div style={{ marginTop: 30 }}>
-          <video
-            ref={videoRef}
-            autoPlay
-            style={{ width: "100%", borderRadius: 20 }}
-          />
-        </div>
-
-        {ingredients.length > 0 && (
-          <div style={{ marginTop: 40 }}>
-            <h2>Erkannte Zutaten</h2>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {ingredients.map((item, i) => (
-                <div
-                  key={i}
-                  onClick={() => setSelected(item)}
-                  style={{
-                    padding: "10px 14px",
-                    background:
-                      selected === item ? "#22c55e" : "rgba(255,255,255,0.2)",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    transition: "all 0.3s",
-                  }}
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {recipes.length > 0 && (
-          <div style={{ marginTop: 40 }}>
-            <h2>Was du kochen kannst</h2>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
-                gap: 20,
-              }}
-            >
-              {recipes.map((r, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "rgba(255,255,255,0.1)",
-                    padding: 20,
-                    borderRadius: 15,
-                    transform: "scale(1)",
-                    transition: "all 0.3s",
-                  }}
-                >
-                  🍳 {r}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {days && (
-          <div style={{ marginTop: 40, fontSize: 20 }}>
-            📅 Dein Essen reicht ungefähr <b>{days} Tage</b>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
-/**
- * Tests
- */
+.container{
 
-function runTests() {
-  const meals = generateRecipes(["Eier", "Käse"]);
+max-width:1000px;
+margin:auto;
+text-align:center;
 
-  console.assert(meals.includes("Käse Omelett"), "Omelett Test fehlgeschlagen");
-
-  const d = estimateDays(["Eier", "Milch", "Brot", "Käse"]);
-
-  console.assert(d === 2, "Days calculation failed");
 }
 
-runTests();
+h1{
+
+font-size:48px;
+margin-bottom:10px;
+
+}
+
+.subtitle{
+
+opacity:0.8;
+margin-bottom:30px;
+
+}
+
+button{
+
+padding:14px 24px;
+border:none;
+border-radius:12px;
+font-size:16px;
+margin:6px;
+cursor:pointer;
+transition:0.3s;
+
+}
+
+.start{
+
+background:#22c55e;
+
+}
+
+.scan{
+
+background:#3b82f6;
+
+}
+
+button:hover{
+
+transform:scale(1.05);
+
+}
+
+video{
+
+width:100%;
+border-radius:16px;
+margin-top:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
+
+}
+
+.section{
+
+margin-top:40px;
+
+}
+
+.cards{
+
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:15px;
+margin-top:15px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,0.15);
+padding:14px 20px;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+backdrop-filter:blur(10px);
+
+}
+
+.card:hover{
+
+transform:translateY(-5px);
+background:rgba(255,255,255,0.25);
+
+}
+
+.result{
+
+margin-top:30px;
+font-size:22px;
+
+}
+
+.fade{
+
+animation:fade 0.6s ease;
+
+}
+
+@keyframes fade{
+
+from{opacity:0; transform:translateY(10px);}
+to{opacity:1; transform:translateY(0);}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="overlay">
+
+<div class="container">
+
+<h1>🥗 FridgeAI</h1>
+
+<p class="subtitle">
+Scanne deinen Kühlschrank und entdecke Rezepte mit KI
+</p>
+
+<button class="start" onclick="startCamera()">📷 Kamera starten</button>
+<button class="scan" onclick="scanFridge()">🤖 Kühlschrank analysieren</button>
+
+<video id="video" autoplay></video>
+
+<div class="section">
+
+<h2>🥕 Erkannte Lebensmittel</h2>
+<div id="ingredients" class="cards"></div>
+
+</div>
+
+<div class="section">
+
+<h2>🍳 Mögliche Gerichte</h2>
+<div id="recipes" class="cards"></div>
+
+</div>
+
+<div class="section">
+
+<h2>🛒 Fehlende Zutaten</h2>
+<div id="shopping" class="cards"></div>
+
+</div>
+
+<div class="section">
+
+<h2>📅 Essensplan</h2>
+<div id="plan" class="cards"></div>
+
+</div>
+
+<div id="days" class="result"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let video=document.getElementById("video")
+
+async function startCamera(){
+
+try{
+
+const stream=await navigator.mediaDevices.getUserMedia({video:true})
+video.srcObject=stream
+
+}catch{
+
+alert("Bitte Kamera erlauben")
+
+}
+
+}
+
+function scanFridge(){
+
+const detected=[
+"Eier",
+"Milch",
+"Käse",
+"Tomaten",
+"Brot"
+]
+
+showIngredients(detected)
+
+generateRecipes(detected)
+
+generateShopping(detected)
+
+generatePlan()
+
+document.getElementById("days").innerText=
+"📅 Dein Essen reicht ungefähr "+Math.floor(detected.length/2)+" Tage"
+
+}
+
+function showIngredients(list){
+
+const div=document.getElementById("ingredients")
+div.innerHTML=""
+
+list.forEach(item=>{
+
+const card=document.createElement("div")
+card.className="card fade"
+card.innerText=item
+
+div.appendChild(card)
+
+})
+
+}
+
+function generateRecipes(list){
+
+let meals=[]
+
+if(list.includes("Eier") && list.includes("Käse"))
+meals.push("Käse Omelett")
+
+if(list.includes("Brot") && list.includes("Käse"))
+meals.push("Gegrilltes Käsebrot")
+
+if(list.includes("Milch") && list.includes("Eier"))
+meals.push("Pfannkuchen")
+
+if(list.includes("Tomaten"))
+meals.push("Tomaten Sandwich")
+
+const div=document.getElementById("recipes")
+div.innerHTML=""
+
+meals.forEach(m=>{
+
+const card=document.createElement("div")
+card.className="card fade"
+card.innerText="🍳 "+m
+
+div.appendChild(card)
+
+})
+
+}
+
+function generateShopping(list){
+
+let needed=[]
+
+if(!list.includes("Spaghetti"))
+needed.push("Spaghetti")
+
+if(!list.includes("Parmesan"))
+needed.push("Parmesan")
+
+const div=document.getElementById("shopping")
+div.innerHTML=""
+
+needed.forEach(n=>{
+
+const card=document.createElement("div")
+card.className="card fade"
+card.innerText=n
+
+div.appendChild(card)
+
+})
+
+}
+
+function generatePlan(){
+
+const meals=[
+"Omelett",
+"Pasta",
+"Sandwich",
+"Pfannkuchen"
+]
+
+const days=[
+"Montag",
+"Dienstag",
+"Mittwoch",
+"Donnerstag"
+]
+
+const div=document.getElementById("plan")
+div.innerHTML=""
+
+for(let i=0;i<days.length;i++){
+
+const card=document.createElement("div")
+card.className="card fade"
+card.innerText=days[i]+": "+meals[i]
+
+div.appendChild(card)
+
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
