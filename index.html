@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
 
 <meta charset="UTF-8">
@@ -77,12 +76,13 @@ background:#22c55e;
 padding:8px;
 margin:5px;
 border-radius:6px;
+cursor:grab;
 }
 
 .day{
 background:#1f2937;
 width:140px;
-min-height:120px;
+min-height:150px;
 margin:5px;
 padding:10px;
 border-radius:10px;
@@ -161,8 +161,6 @@ border:none;
 
 <button onclick="analyze()">Analysieren</button>
 
-<h3>Zutaten</h3>
-
 <div id="ingredientList"></div>
 
 </div>
@@ -176,6 +174,14 @@ border:none;
 <h1>Rezepte</h1>
 
 <button onclick="buyPremium()">Premium kaufen – 3.99 €</button>
+
+<h3>Eigenes Rezept erstellen</h3>
+
+<input id="recipeName" placeholder="Rezeptname">
+
+<input id="recipeIngredients" placeholder="Zutaten (Komma getrennt)">
+
+<button onclick="addRecipe()">Rezept erstellen</button>
 
 <div id="recipeList"></div>
 
@@ -191,13 +197,13 @@ border:none;
 
 <div class="plan">
 
-<div class="day">Montag</div>
-<div class="day">Dienstag</div>
-<div class="day">Mittwoch</div>
-<div class="day">Donnerstag</div>
-<div class="day">Freitag</div>
-<div class="day">Samstag</div>
-<div class="day">Sonntag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Samstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Sonntag</div>
 
 </div>
 
@@ -210,6 +216,10 @@ border:none;
 <div class="overlay">
 
 <h1>Einkaufsliste</h1>
+
+<input id="shopInput" placeholder="Produkt">
+
+<button onclick="addShopping()">Hinzufügen</button>
 
 <div id="shoppingList"></div>
 
@@ -224,19 +234,10 @@ border:none;
 
 let premium=false
 let ingredients=[]
+let shopping=[]
+let recipes=[]
 
-let foods=[
-"Apfel","Banane","Orange","Zitrone","Limette","Birne","Pfirsich","Mango","Ananas","Erdbeere",
-"Tomate","Gurke","Paprika","Zwiebel","Knoblauch","Karotte","Brokkoli","Blumenkohl","Spinat","Salat",
-"Kartoffel","Süßkartoffel","Reis","Pasta","Spaghetti","Nudeln","Quinoa","Haferflocken","Mehl","Zucker",
-"Milch","Joghurt","Butter","Käse","Ei","Sahne","Frischkäse","Mozzarella","Parmesan","Feta",
-"Hähnchen","Rindfleisch","Schwein","Lachs","Thunfisch","Shrimps","Tofu","Tempeh","Bohnen","Linsen",
-"Kichererbsen","Mais","Erbsen","Pilze","Avocado","Oliven","Mandeln","Walnüsse","Haselnüsse","Cashews",
-"Rosinen","Honig","Ahornsirup","Ketchup","Mayonnaise","Senf","Sojasauce","Chilisauce","Curry","Paprikapulver",
-"Oregano","Basilikum","Thymian","Rosmarin","Zimt","Muskat","Koriander","Kreuzkümmel","Vanille","Schokolade",
-"Kakao","Kokosmilch","Kokosraspel","Bananchips","Popcorn","Chips","Cracker","Brot","Toast","Brötchen",
-"Bagel","Wrap","Tortilla","Pizza","Burger","Hotdog","Lasagne","Ravioli","Tiramisu","Kuchen"
-]
+let foods=["Apfel","Banane","Tomate","Ei","Käse","Brot","Reis","Pasta","Salat","Hähnchen"]
 
 function register(){
 
@@ -280,7 +281,6 @@ ingredients.push(foods[Math.floor(Math.random()*foods.length)])
 }
 
 renderIngredients()
-generateRecipes()
 
 }
 
@@ -303,11 +303,24 @@ ingredientList.appendChild(el)
 function buyPremium(){
 
 premium=true
-generateRecipes()
+renderRecipes()
 
 }
 
-function generateRecipes(){
+function addRecipe(){
+
+let name=recipeName.value
+let ing=recipeIngredients.value.split(",")
+
+let recipe={name:name,ingredients:ing}
+
+recipes.push(recipe)
+
+renderRecipes()
+
+}
+
+function renderRecipes(){
 
 recipeList.innerHTML=""
 
@@ -319,21 +332,92 @@ return
 
 }
 
-ingredients.forEach(i=>{
+recipes.forEach(r=>{
 
-let r=document.createElement("div")
+let el=document.createElement("div")
 
-r.className="recipe"
-r.innerText="Gericht mit "+i
+el.className="recipe"
+el.innerText=r.name
+el.draggable=true
 
-recipeList.appendChild(r)
+el.ondragstart=(e)=>{
+
+e.dataTransfer.setData("recipe",JSON.stringify(r))
+
+}
+
+recipeList.appendChild(el)
 
 })
+
+}
+
+function allowDrop(e){
+
+e.preventDefault()
+
+}
+
+function drop(e){
+
+e.preventDefault()
+
+let recipe=JSON.parse(e.dataTransfer.getData("recipe"))
+
+let el=document.createElement("div")
+el.innerText=recipe.name
+
+e.target.appendChild(el)
+
+recipe.ingredients.forEach(i=>{
+
+if(!ingredients.includes(i) && !shopping.includes(i)){
+
+shopping.push(i)
+
+}
+
+})
+
+renderShopping()
+
+}
+
+function addShopping(){
+
+shopping.push(shopInput.value)
+
+renderShopping()
+
+}
+
+function renderShopping(){
+
+shoppingList.innerHTML=""
+
+shopping.forEach((i,index)=>{
+
+let el=document.createElement("div")
+
+el.className="card"
+
+el.innerHTML=i+" <button onclick='removeItem("+index+")'>X</button>"
+
+shoppingList.appendChild(el)
+
+})
+
+}
+
+function removeItem(i){
+
+shopping.splice(i,1)
+
+renderShopping()
 
 }
 
 </script>
 
 </body>
-
 </html>
