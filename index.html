@@ -4,132 +4,120 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>FridgeAI</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-background-image:url("https://images.unsplash.com/photo-1542838132-92c53300491e");
-background-size:cover;
+background:#111;
 color:white;
-}
-
-.overlay{
-background:rgba(0,0,0,0.75);
-min-height:100vh;
-}
-
-.center{
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.login{
-background:#111827;
-padding:30px;
-border-radius:10px;
-width:320px;
-text-align:center;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:6px 0;
-border-radius:6px;
-border:none;
-}
-
-button{
-padding:10px 20px;
-margin-top:10px;
-border:none;
-border-radius:6px;
-background:#22c55e;
-color:white;
-cursor:pointer;
 }
 
 .app{
-display:none;
+display:flex;
+min-height:100vh;
 }
 
 .sidebar{
-position:fixed;
-left:0;
-top:0;
-width:200px;
-height:100%;
-background:#111827;
+
+width:220px;
+background:#1f2937;
 padding:20px;
+
 }
 
-.sidebar div{
-margin:15px 0;
+.sidebar h2{
+margin-bottom:30px;
+}
+
+.sidebar button{
+
+display:block;
+width:100%;
+margin:10px 0;
+padding:12px;
+background:#374151;
+border:none;
+color:white;
+border-radius:8px;
 cursor:pointer;
+
 }
 
 .content{
-margin-left:220px;
-padding:40px;
-text-align:center;
+
+flex:1;
+padding:20px;
+
 }
 
-video{
-width:450px;
-border-radius:10px;
+.page{
+
+display:none;
+
+}
+
+.active{
+
+display:block;
+
 }
 
 .card{
+
 background:#1f2937;
-padding:8px 12px;
-margin:5px;
-border-radius:6px;
+padding:12px;
+margin:6px;
+border-radius:8px;
 display:inline-block;
-}
 
-.plan{
-display:flex;
-gap:10px;
-justify-content:center;
-flex-wrap:wrap;
-}
-
-.day{
-background:#1f2937;
-padding:15px;
-width:150px;
-min-height:120px;
-border-radius:10px;
 }
 
 .food{
+
 background:#22c55e;
+padding:6px;
 margin:5px;
-padding:5px;
 border-radius:6px;
 cursor:grab;
+
 }
 
-.shopItem{
+.plan{
+
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+
+}
+
+.day{
+
 background:#1f2937;
-margin:5px;
-padding:8px;
-border-radius:6px;
+padding:10px;
+width:150px;
+min-height:120px;
+border-radius:10px;
+
 }
 
-.done{
-text-decoration:line-through;
-opacity:0.6;
+input{
+
+padding:10px;
+margin:5px;
+border-radius:6px;
+border:none;
+
+}
+
+button.action{
+
+background:#22c55e;
+
 }
 
 </style>
@@ -138,83 +126,87 @@ opacity:0.6;
 
 <body>
 
-<div class="overlay">
-
-<div id="loginScreen" class="center">
-
-<div class="login">
-
-<h2>FridgeAI</h2>
-
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Passwort">
-
-<button onclick="register()">Registrieren</button>
-<button onclick="login()">Login</button>
-
-</div>
-
-</div>
-
-<div id="app" class="app">
+<div class="app">
 
 <div class="sidebar">
 
-<h3>FridgeAI</h3>
+<h2>FridgeAI</h2>
 
-<div onclick="show('scan')">📷 Scan</div>
-<div onclick="show('plan')">📅 Essensplan</div>
-<div onclick="show('shop')">🛒 Einkauf</div>
-<div onclick="logout()">Logout</div>
+<button onclick="showPage('dashboard')">🏠 Dashboard</button>
+
+<button onclick="showPage('scan')">📷 Scan</button>
+
+<button onclick="showPage('recipes')">🍳 Rezepte</button>
+
+<button onclick="showPage('plan')">📅 Wochenplan</button>
+
+<button onclick="showPage('shop')">🛒 Einkauf</button>
 
 </div>
 
 <div class="content">
 
-<h1>Kühlschrank Scanner</h1>
+<div id="dashboard" class="page active">
 
-<button onclick="startCamera()">Kamera starten</button>
-<button onclick="scan()">Analysieren</button>
+<h1>Willkommen bei FridgeAI</h1>
 
-<br><br>
+<p>Scanne deinen Kühlschrank und plane dein Essen.</p>
 
-<video id="video" autoplay></video>
-<canvas id="canvas" style="display:none"></canvas>
+</div>
 
-<h2>Zutaten</h2>
+<div id="scan" class="page">
+
+<h1>Kühlschrank Scan</h1>
+
+<button onclick="startCamera()" class="action">Kamera starten</button>
+
+<video id="video" width="300" autoplay></video>
+
+<h3>Zutaten</h3>
+
 <div id="foods"></div>
 
-<h3>Lebensmittel hinzufügen</h3>
+<input id="newFood" placeholder="Lebensmittel hinzufügen">
 
-<input id="newFood" placeholder="z.B. Tomaten">
+<button onclick="addFood()" class="action">Hinzufügen</button>
 
-<button onclick="addFood()">Hinzufügen</button>
+</div>
 
-<h2>Rezepte</h2>
+<div id="recipes" class="page">
 
-<input id="search" placeholder="Rezept suchen">
+<h1>Rezepte</h1>
 
-<button onclick="searchRecipe()">Suchen</button>
+<div id="recipeList"></div>
 
-<div id="recipes"></div>
+</div>
 
-<h2>Essensplan</h2>
+<div id="plan" class="page">
+
+<h1>Wochenplan</h1>
 
 <div class="plan">
 
 <div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
+
 <div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
+
 <div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
+
 <div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
+
 <div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
 
 </div>
 
-<h2>Einkaufsliste</h2>
+</div>
 
-<input id="shopInput" placeholder="z.B. Milch">
+<div id="shop" class="page">
 
-<button onclick="addShop()">Hinzufügen</button>
+<h1>Einkaufsliste</h1>
+
+<input id="shopInput" placeholder="Produkt">
+
+<button onclick="addShop()" class="action">Hinzufügen</button>
 
 <div id="shopList"></div>
 
@@ -226,98 +218,33 @@ opacity:0.6;
 
 <script>
 
-let video=document.getElementById("video")
-let model
-
 let ingredients=[]
 let shopping=[]
 
-async function loadModel(){
+function showPage(p){
 
-model=await cocoSsd.load()
+document.querySelectorAll(".page").forEach(e=>e.classList.remove("active"))
 
-}
-
-loadModel()
-
-function register(){
-
-localStorage.setItem("user",
-
-JSON.stringify({
-
-email:email.value,
-pass:pass.value
-
-})
-
-)
-
-alert("Registriert")
-
-}
-
-function login(){
-
-let u=JSON.parse(localStorage.getItem("user"))
-
-if(!u)return alert("Kein Account")
-
-if(u.email==email.value && u.pass==pass.value){
-
-loginScreen.style.display="none"
-app.style.display="block"
-
-}else{
-
-alert("Falsche Daten")
-
-}
-
-}
-
-function logout(){
-
-location.reload()
+document.getElementById(p).classList.add("active")
 
 }
 
 async function startCamera(){
 
 const stream=await navigator.mediaDevices.getUserMedia({video:true})
+
 video.srcObject=stream
-
-}
-
-async function scan(){
-
-const canvas=document.getElementById("canvas")
-
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
-
-const ctx=canvas.getContext("2d")
-
-ctx.drawImage(video,0,0)
-
-const preds=await model.detect(canvas)
-
-preds.forEach(p=>{
-
-ingredients.push(p.class)
-
-})
-
-renderFoods()
-generateRecipes()
 
 }
 
 function addFood(){
 
-ingredients.push(newFood.value)
+let f=newFood.value
+
+ingredients.push(f)
 
 renderFoods()
+
 generateRecipes()
 
 }
@@ -326,14 +253,15 @@ function renderFoods(){
 
 foods.innerHTML=""
 
-ingredients.forEach(f=>{
+ingredients.forEach(i=>{
 
-let card=document.createElement("div")
+let c=document.createElement("div")
 
-card.className="card"
-card.innerText=f
+c.className="card"
 
-foods.appendChild(card)
+c.innerText=i
+
+foods.appendChild(c)
 
 })
 
@@ -341,74 +269,61 @@ foods.appendChild(card)
 
 function generateRecipes(){
 
-recipes.innerHTML=""
+recipeList.innerHTML=""
 
-let meals=["Pasta","Salat","Sandwich","Omelett"]
+let recipes=[]
 
-meals.forEach(m=>{
+if(ingredients.includes("Ei"))recipes.push("Omelett")
 
-let food=document.createElement("div")
+if(ingredients.includes("Tomate"))recipes.push("Tomaten Pasta")
 
-food.className="food"
-food.draggable=true
-food.innerText=m
-food.ondragstart=drag
+if(ingredients.includes("Käse"))recipes.push("Käse Sandwich")
 
-recipes.appendChild(food)
+if(recipes.length==0)recipes=["Salat","Pasta","Gemüsepfanne"]
 
-})
-
-}
-
-function searchRecipe(){
-
-let q=search.value.toLowerCase()
-
-recipes.innerHTML=""
-
-let all=["Pasta","Salat","Sandwich","Omelett","Pizza"]
-
-all.filter(r=>r.toLowerCase().includes(q))
-
-.forEach(r=>{
+recipes.forEach(r=>{
 
 let f=document.createElement("div")
 
 f.className="food"
-f.draggable=true
+
 f.innerText=r
+
+f.draggable=true
+
 f.ondragstart=drag
 
-recipes.appendChild(f)
+recipeList.appendChild(f)
 
 })
 
 }
 
-function allowDrop(ev){
+function allowDrop(e){
 
-ev.preventDefault()
-
-}
-
-function drag(ev){
-
-ev.dataTransfer.setData("text",ev.target.innerText)
+e.preventDefault()
 
 }
 
-function drop(ev){
+function drag(e){
 
-ev.preventDefault()
+e.dataTransfer.setData("text",e.target.innerText)
 
-let data=ev.dataTransfer.getData("text")
+}
 
-let food=document.createElement("div")
+function drop(e){
 
-food.className="food"
-food.innerText=data
+e.preventDefault()
 
-ev.target.appendChild(food)
+let d=e.dataTransfer.getData("text")
+
+let f=document.createElement("div")
+
+f.className="food"
+
+f.innerText=d
+
+e.target.appendChild(f)
 
 }
 
@@ -424,27 +339,17 @@ function renderShop(){
 
 shopList.innerHTML=""
 
-shopping.forEach((item,i)=>{
+shopping.forEach((i,index)=>{
 
 let el=document.createElement("div")
 
-el.className="shopItem"
+el.className="card"
 
-el.innerHTML=`
-<input type="checkbox" onchange="toggle(${i})">
-${item}
-<button onclick="removeShop(${i})">X</button>
-`
+el.innerHTML=`${i} <button onclick="removeShop(${index})">X</button>`
 
 shopList.appendChild(el)
 
 })
-
-}
-
-function toggle(i){
-
-document.getElementsByClassName("shopItem")[i].classList.toggle("done")
 
 }
 
@@ -459,4 +364,5 @@ renderShop()
 </script>
 
 </body>
+
 </html>
