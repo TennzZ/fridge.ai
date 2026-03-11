@@ -23,10 +23,10 @@ padding:20px;
 }
 
 .loginBg{background-image:url("https://images.unsplash.com/photo-1490818387583-1baba5e638af");}
-.scanBg{background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");}
+scanBg{background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");}
 .recipeBg{background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c");}
-.planBg{background-image:url("https://images.unsplash.com/photo-1556910103-1c02745aae4d");}
-.shopBg{background-image:url("https://images.unsplash.com/photo-1506617420156-8e4536971650");}
+planBg{background-image:url("https://images.unsplash.com/photo-1556910103-1c02745aae4d");}
+shopBg{background-image:url("https://images.unsplash.com/photo-1506617420156-8e4536971650");}
 
 .overlay{
 background:rgba(0,0,0,0.75);
@@ -116,29 +116,6 @@ border:none;
 
 <body>
 
-<!-- LOGIN -->
-
-<div id="loginPage" class="pageBg loginBg">
-
-<div class="overlay">
-
-<h1>FridgeAI Login</h1>
-
-<input id="email" placeholder="Email">
-
-<input id="password" type="password" placeholder="Passwort">
-
-<button onclick="register()">Registrieren</button>
-<button onclick="login()">Login</button>
-
-</div>
-
-</div>
-
-<!-- APP -->
-
-<div id="app" style="display:none">
-
 <div class="sidebar">
 
 <h2>FridgeAI</h2>
@@ -152,7 +129,7 @@ border:none;
 
 <div class="content">
 
-<!-- SCAN -->
+<!-- ANALYSE -->
 
 <div id="scan" class="page active pageBg scanBg">
 <div class="overlay">
@@ -173,12 +150,9 @@ border:none;
 
 <h1>Rezepte</h1>
 
-<button onclick="buyPremium()">Premium kaufen – 3.99 €</button>
-
 <h3>Eigenes Rezept erstellen</h3>
 
 <input id="recipeName" placeholder="Rezeptname">
-
 <input id="recipeIngredients" placeholder="Zutaten (Komma getrennt)">
 
 <button onclick="addRecipe()">Rezept erstellen</button>
@@ -197,13 +171,13 @@ border:none;
 
 <div class="plan">
 
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Samstag</div>
-<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Sonntag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Montag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Dienstag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Mittwoch</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Donnerstag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Freitag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Samstag</div>
+<div class="day" ondrop="dropRecipe(event)" ondragover="allowDrop(event)">Sonntag</div>
 
 </div>
 
@@ -228,46 +202,17 @@ border:none;
 
 </div>
 
-</div>
-
 <script>
 
-let premium=false
 let ingredients=[]
 let shopping=[]
 let recipes=[]
 
 let foods=["Apfel","Banane","Tomate","Ei","Käse","Brot","Reis","Pasta","Salat","Hähnchen"]
 
-function register(){
-
-localStorage.setItem("user",
-JSON.stringify({email:email.value,password:password.value})
-)
-
-alert("Registriert")
-
-}
-
-function login(){
-
-let user=JSON.parse(localStorage.getItem("user"))
-
-if(user && user.email===email.value && user.password===password.value){
-
-loginPage.style.display="none"
-app.style.display="block"
-
-}
-
-}
-
 function showPage(id){
-
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
-
 document.getElementById(id).classList.add("active")
-
 }
 
 function analyze(){
@@ -300,13 +245,6 @@ ingredientList.appendChild(el)
 
 }
 
-function buyPremium(){
-
-premium=true
-renderRecipes()
-
-}
-
 function addRecipe(){
 
 let name=recipeName.value
@@ -323,14 +261,6 @@ renderRecipes()
 function renderRecipes(){
 
 recipeList.innerHTML=""
-
-if(!premium){
-
-recipeList.innerHTML="🔒 Premium erforderlich für Rezepte"
-
-return
-
-}
 
 recipes.forEach(r=>{
 
@@ -358,13 +288,15 @@ e.preventDefault()
 
 }
 
-function drop(e){
+function dropRecipe(e){
 
 e.preventDefault()
 
 let recipe=JSON.parse(e.dataTransfer.getData("recipe"))
 
 let el=document.createElement("div")
+
+el.className="card"
 el.innerText=recipe.name
 
 e.target.appendChild(el)
