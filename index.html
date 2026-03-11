@@ -4,44 +4,96 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>FridgeAI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-background:#111;
+background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
+background-size:cover;
 color:white;
 }
 
+.overlay{
+background:rgba(0,0,0,0.7);
+min-height:100vh;
+}
+
+.center{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.loginCard{
+
+background:#1f2937;
+padding:30px;
+border-radius:10px;
+width:320px;
+text-align:center;
+
+}
+
+input{
+
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:6px;
+border:none;
+
+}
+
+button{
+
+padding:10px 20px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:white;
+cursor:pointer;
+
+}
+
 .app{
+
+display:none;
+
+}
+
+.appLayout{
+
 display:flex;
 min-height:100vh;
+
 }
 
 .sidebar{
 
 width:220px;
-background:#1f2937;
+background:#111827;
 padding:20px;
 
-}
-
-.sidebar h2{
-margin-bottom:30px;
 }
 
 .sidebar button{
 
 display:block;
 width:100%;
-margin:10px 0;
+margin:8px 0;
 padding:12px;
-background:#374151;
 border:none;
+background:#374151;
 color:white;
 border-radius:8px;
 cursor:pointer;
@@ -105,18 +157,27 @@ border-radius:10px;
 
 }
 
-input{
+.shopItem{
 
-padding:10px;
+background:#1f2937;
+padding:8px;
 margin:5px;
 border-radius:6px;
-border:none;
 
 }
 
-button.action{
+img.foodimg{
 
-background:#22c55e;
+width:100px;
+border-radius:10px;
+margin:5px;
+
+}
+
+video{
+
+width:320px;
+border-radius:10px;
 
 }
 
@@ -126,21 +187,45 @@ background:#22c55e;
 
 <body>
 
-<div class="app">
+<div class="overlay">
+
+<div id="loginScreen" class="center">
+
+<div class="loginCard">
+
+<h2>FridgeAI Login</h2>
+
+<input id="email" placeholder="Email">
+
+<input id="pass" type="password" placeholder="Passwort">
+
+<button onclick="register()">Registrieren</button>
+
+<button onclick="login()">Login</button>
+
+</div>
+
+</div>
+
+<div id="app" class="app">
+
+<div class="appLayout">
 
 <div class="sidebar">
 
-<h2>FridgeAI</h2>
+<h3>FridgeAI</h3>
 
 <button onclick="showPage('dashboard')">🏠 Dashboard</button>
 
-<button onclick="showPage('scan')">📷 Scan</button>
+<button onclick="showPage('scan')">📷 Kühlschrank Scan</button>
 
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
 
 <button onclick="showPage('plan')">📅 Wochenplan</button>
 
 <button onclick="showPage('shop')">🛒 Einkauf</button>
+
+<button onclick="logout()">Logout</button>
 
 </div>
 
@@ -150,7 +235,9 @@ background:#22c55e;
 
 <h1>Willkommen bei FridgeAI</h1>
 
-<p>Scanne deinen Kühlschrank und plane dein Essen.</p>
+<img src="https://images.unsplash.com/photo-1490818387583-1baba5e638af" width="300">
+
+<p>Scanne deinen Kühlschrank und finde Rezepte.</p>
 
 </div>
 
@@ -158,9 +245,11 @@ background:#22c55e;
 
 <h1>Kühlschrank Scan</h1>
 
-<button onclick="startCamera()" class="action">Kamera starten</button>
+<button onclick="startCamera()">Kamera starten</button>
 
-<video id="video" width="300" autoplay></video>
+<video id="video" autoplay></video>
+
+<canvas id="canvas" style="display:none"></canvas>
 
 <h3>Zutaten</h3>
 
@@ -168,7 +257,7 @@ background:#22c55e;
 
 <input id="newFood" placeholder="Lebensmittel hinzufügen">
 
-<button onclick="addFood()" class="action">Hinzufügen</button>
+<button onclick="addFood()">Hinzufügen</button>
 
 </div>
 
@@ -206,9 +295,13 @@ background:#22c55e;
 
 <input id="shopInput" placeholder="Produkt">
 
-<button onclick="addShop()" class="action">Hinzufügen</button>
+<button onclick="addShop()">Hinzufügen</button>
 
 <div id="shopList"></div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -220,6 +313,45 @@ background:#22c55e;
 
 let ingredients=[]
 let shopping=[]
+let video=document.getElementById("video")
+
+function register(){
+
+localStorage.setItem("user",
+
+JSON.stringify({
+
+email:email.value,
+pass:pass.value
+
+})
+
+)
+
+alert("Registriert")
+
+}
+
+function login(){
+
+let u=JSON.parse(localStorage.getItem("user"))
+
+if(!u)return alert("Kein Account")
+
+if(u.email==email.value && u.pass==pass.value){
+
+loginScreen.style.display="none"
+app.style.display="block"
+
+}
+
+}
+
+function logout(){
+
+location.reload()
+
+}
 
 function showPage(p){
 
@@ -239,12 +371,9 @@ video.srcObject=stream
 
 function addFood(){
 
-let f=newFood.value
-
-ingredients.push(f)
+ingredients.push(newFood.value)
 
 renderFoods()
-
 generateRecipes()
 
 }
@@ -343,7 +472,7 @@ shopping.forEach((i,index)=>{
 
 let el=document.createElement("div")
 
-el.className="card"
+el.className="shopItem"
 
 el.innerHTML=`${i} <button onclick="removeShop(${index})">X</button>`
 
@@ -364,5 +493,4 @@ renderShop()
 </script>
 
 </body>
-
 </html>
