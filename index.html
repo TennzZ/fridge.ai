@@ -1,71 +1,43 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>FridgeAI</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-background:#111;
 color:white;
 }
 
-.loginScreen{
-background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");
+.pageBg{
+min-height:100vh;
 background-size:cover;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
+background-position:center;
+padding:20px;
 }
 
-.loginCard{
-background:rgba(0,0,0,0.85);
-padding:30px;
-border-radius:10px;
-width:300px;
-text-align:center;
-}
+.scanBg{background-image:url("https://images.unsplash.com/photo-1606787366850-de6330128bfc");}
+.recipeBg{background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c");}
+.planBg{background-image:url("https://images.unsplash.com/photo-1556910103-1c02745aae4d");}
+.shopBg{background-image:url("https://images.unsplash.com/photo-1506617420156-8e4536971650");}
 
-input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border:none;
-border-radius:6px;
-}
-
-button{
-padding:10px;
-margin:5px;
-border:none;
-border-radius:6px;
-background:#22c55e;
-color:white;
-cursor:pointer;
-}
-
-.app{
-display:none;
-}
-
-.layout{
-display:flex;
+.overlay{
+background:rgba(0,0,0,0.75);
+padding:20px;
 min-height:100vh;
 }
 
 .sidebar{
-width:220px;
-background:#1f2937;
+position:fixed;
+left:0;
+top:0;
+width:200px;
+height:100%;
+background:#111827;
 padding:20px;
 }
 
@@ -82,17 +54,11 @@ cursor:pointer;
 }
 
 .content{
-flex:1;
-padding:20px;
+margin-left:220px;
 }
 
-.page{
-display:none;
-}
-
-.active{
-display:block;
-}
+.page{display:none}
+.active{display:block}
 
 .card{
 background:#1f2937;
@@ -102,144 +68,114 @@ border-radius:6px;
 display:inline-block;
 }
 
-.food{
+.recipe{
 background:#22c55e;
-padding:6px;
+padding:8px;
 margin:5px;
 border-radius:6px;
 cursor:grab;
 }
 
+.day{
+background:#1f2937;
+width:140px;
+min-height:120px;
+margin:5px;
+padding:10px;
+border-radius:10px;
+}
+
 .plan{
 display:flex;
 flex-wrap:wrap;
-gap:10px;
 }
 
-.day{
-background:#1f2937;
+button{
 padding:10px;
-width:130px;
-min-height:120px;
-border-radius:10px;
+margin:5px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:white;
+cursor:pointer;
 }
 
-.shopItem{
-background:#1f2937;
-padding:8px;
+input{
+padding:10px;
 margin:5px;
 border-radius:6px;
-}
-
-video{
-width:320px;
-border-radius:10px;
+border:none;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div id="loginScreen" class="loginScreen">
-
-<div class="loginCard">
-
-<h2>FridgeAI Login</h2>
-
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Passwort">
-
-<button onclick="register()">Registrieren</button>
-<button onclick="login()">Login</button>
-
-</div>
-
-</div>
-
-<div id="app" class="app">
-
-<div class="layout">
-
 <div class="sidebar">
-
 <h2>FridgeAI</h2>
-
-<button onclick="showPage('scan')">📷 Scan</button>
+<button onclick="showPage('scan')">📷 Analyse</button>
 <button onclick="showPage('recipes')">🍳 Rezepte</button>
 <button onclick="showPage('plan')">📅 Wochenplan</button>
-<button onclick="showPage('shop')">🛒 Einkauf</button>
-<button onclick="logout()">Logout</button>
-
+<button onclick="showPage('shop')">🛒 Einkaufsliste</button>
 </div>
 
 <div class="content">
 
-<div id="scan" class="page active">
+<div id="scan" class="page active pageBg scanBg">
+<div class="overlay">
 
-<h1>Kühlschrank Scan</h1>
+<h1>Kühlschrank Analyse</h1>
 
-<button onclick="startCamera()">Kamera starten</button>
-<button onclick="switchCamera()">Kamera wechseln</button>
-<button onclick="takePhoto()">Foto aufnehmen</button>
-<button onclick="analyze()">Analysieren</button>
-
-<br><br>
-
-<video id="video" autoplay></video>
-<canvas id="canvas" style="display:none"></canvas>
+<button onclick="simulateScan()">Kühlschrank analysieren</button>
 
 <h3>Zutaten</h3>
-<div id="foods"></div>
+<div id="ingredientList"></div>
 
-<input id="manualFood" placeholder="Lebensmittel hinzufügen">
-<button onclick="addFood()">Hinzufügen</button>
-
-<h3>Kalorien Gesamt</h3>
-<div id="calories"></div>
+<input id="newIngredient" placeholder="Lebensmittel hinzufügen">
+<button onclick="addIngredient()">Hinzufügen</button>
 
 </div>
+</div>
 
-<div id="recipes" class="page">
+<div id="recipes" class="page pageBg recipeBg">
+<div class="overlay">
 
 <h1>Rezepte</h1>
 
 <div id="recipeList"></div>
 
 </div>
+</div>
 
-<div id="plan" class="page">
+<div id="plan" class="page pageBg planBg">
+<div class="overlay">
 
 <h1>Wochenplan</h1>
 
 <div class="plan">
 
-<div class="day">Montag</div>
-<div class="day">Dienstag</div>
-<div class="day">Mittwoch</div>
-<div class="day">Donnerstag</div>
-<div class="day">Freitag</div>
-<div class="day">Samstag</div>
-<div class="day">Sonntag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Montag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Dienstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Mittwoch</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Donnerstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Freitag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Samstag</div>
+<div class="day" ondrop="drop(event)" ondragover="allowDrop(event)">Sonntag</div>
 
 </div>
 
 </div>
+</div>
 
-<div id="shop" class="page">
+<div id="shop" class="page pageBg shopBg">
+<div class="overlay">
 
 <h1>Einkaufsliste</h1>
 
-<input id="shopInput" placeholder="Produkt">
-<button onclick="addShop()">Hinzufügen</button>
-
-<div id="shopList"></div>
+<div id="shoppingList"></div>
 
 </div>
-
-</div>
-
 </div>
 
 </div>
@@ -248,138 +184,53 @@ border-radius:10px;
 
 let ingredients=[]
 let shopping=[]
-let video=document.getElementById("video")
-let canvas=document.getElementById("canvas")
-let camera="environment"
 
-const foodMap={
-apple:{name:"Apfel",cal:95},
-banana:{name:"Banane",cal:105},
-orange:{name:"Orange",cal:62},
-sandwich:{name:"Sandwich",cal:250},
-bottle:{name:"Getränk",cal:120}
+let recipes=[
+{name:"Omelett",needs:["Ei","Käse"]},
+{name:"Tomaten Pasta",needs:["Tomate","Spaghetti"]},
+{name:"Sandwich",needs:["Brot","Käse"]},
+{name:"Salat",needs:["Salat","Tomate"]}
+]
+
+function showPage(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+document.getElementById(id).classList.add("active")
 }
 
-let model
+function simulateScan(){
 
-async function loadModel(){
-model=await cocoSsd.load()
-}
+const scans=[
+["Ei","Käse","Tomate"],
+["Brot","Käse"],
+["Salat","Tomate"],
+["Ei","Tomate"]
+]
 
-loadModel()
+ingredients=scans[Math.floor(Math.random()*scans.length)]
 
-function register(){
-
-localStorage.setItem("user",
-JSON.stringify({email:email.value,pass:pass.value})
-)
-
-alert("Registriert")
-
-}
-
-function login(){
-
-let u=JSON.parse(localStorage.getItem("user"))
-
-if(!u)return alert("Kein Account")
-
-if(u.email==email.value && u.pass==pass.value){
-
-loginScreen.style.display="none"
-app.style.display="block"
-
-}
-
-}
-
-function logout(){
-location.reload()
-}
-
-function showPage(p){
-
-document.querySelectorAll(".page").forEach(e=>e.classList.remove("active"))
-
-document.getElementById(p).classList.add("active")
-
-}
-
-async function startCamera(){
-
-const stream=await navigator.mediaDevices.getUserMedia({
-video:{facingMode:camera}
-})
-
-video.srcObject=stream
-
-}
-
-function switchCamera(){
-
-camera=camera==="environment"?"user":"environment"
-
-startCamera()
-
-}
-
-function takePhoto(){
-
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
-
-const ctx=canvas.getContext("2d")
-
-ctx.drawImage(video,0,0)
-
-}
-
-async function analyze(){
-
-const predictions=await model.detect(canvas)
-
-let total=0
-
-predictions.forEach(p=>{
-
-if(foodMap[p.class]){
-
-ingredients.push(foodMap[p.class].name)
-total+=foodMap[p.class].cal
-
-}
-
-})
-
-renderFoods()
-
-document.getElementById("calories").innerText=total+" kcal"
-
+renderIngredients()
 generateRecipes()
 
 }
 
-function addFood(){
+function addIngredient(){
 
-ingredients.push(manualFood.value)
+ingredients.push(newIngredient.value)
 
-renderFoods()
+renderIngredients()
+generateRecipes()
 
 }
 
-function renderFoods(){
+function renderIngredients(){
 
-foods.innerHTML=""
+ingredientList.innerHTML=""
 
-ingredients.forEach(f=>{
-
-let c=document.createElement("div")
-
-c.className="card"
-c.innerText=f
-
-foods.appendChild(c)
-
+ingredients.forEach(i=>{
+let el=document.createElement("div")
+el.className="card"
+el.innerText=i
+ingredientList.appendChild(el)
 })
 
 }
@@ -388,24 +239,16 @@ function generateRecipes(){
 
 recipeList.innerHTML=""
 
-let recipes=[]
-
-if(ingredients.includes("Apfel"))recipes.push("Fruchtsalat")
-
-if(ingredients.includes("Banane"))recipes.push("Bananen Pancakes")
-
-if(ingredients.includes("Sandwich"))recipes.push("Sandwich Toast")
-
-if(recipes.length==0){
-recipes=["Omelett","Pasta","Gemüsepfanne"]
-}
-
 recipes.forEach(r=>{
 
 let el=document.createElement("div")
+el.className="recipe"
+el.innerText=r.name
+el.draggable=true
 
-el.className="food"
-el.innerText=r
+el.ondragstart=(e)=>{
+e.dataTransfer.setData("recipe",JSON.stringify(r))
+}
 
 recipeList.appendChild(el)
 
@@ -413,37 +256,41 @@ recipeList.appendChild(el)
 
 }
 
-function addShop(){
-
-shopping.push(shopInput.value)
-
-renderShop()
-
+function allowDrop(e){
+e.preventDefault()
 }
 
-function renderShop(){
+function drop(e){
 
-shopList.innerHTML=""
+e.preventDefault()
 
-shopping.forEach((i,index)=>{
+let recipe=JSON.parse(e.dataTransfer.getData("recipe"))
 
 let el=document.createElement("div")
+el.innerText=recipe.name
 
-el.className="shopItem"
+e.target.appendChild(el)
 
-el.innerHTML=`${i} <button onclick="removeShop(${index})">X</button>`
-
-shopList.appendChild(el)
-
+recipe.needs.forEach(n=>{
+if(!ingredients.includes(n) && !shopping.includes(n)){
+shopping.push(n)
+}
 })
+
+renderShopping()
 
 }
 
-function removeShop(i){
+function renderShopping(){
 
-shopping.splice(i,1)
+shoppingList.innerHTML=""
 
-renderShop()
+shopping.forEach(i=>{
+let el=document.createElement("div")
+el.className="card"
+el.innerText=i
+shoppingList.appendChild(el)
+})
 
 }
 
